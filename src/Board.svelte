@@ -12,7 +12,7 @@
 
         cells = Array.from({length: 64},(_,index) => {
             const rank = Math.floor(index / 8) + 1;
-            const file = (index % 8)+1;
+            const file = 8 - (index % 8);
             const cell = {
                 rank,
                 file,
