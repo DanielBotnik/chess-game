@@ -14,13 +14,19 @@
             const rank = 7 - Math.floor(index / 8) + 1;
             const file = 1 + (index % 8);
             const cell = {
-                rank,
-                file,
+                rank: rank,
+                file: file,
+                piece: null,
             };
             return cell;
         });
-        console.log(board.style.width);
+        init_board(cells);
     });
+
+    function init_board(cells){
+        for(var i = 8 ; i < 16 ; i++)
+            cells[i].piece = {color:'w',type:'pawn'};
+    }
 
     
 </script>
@@ -28,7 +34,7 @@
 
 <div class='board' bind:this={board}>
     {#each cells as cell}
-        <Cell rank={cell.rank} file={cell.file} size={board.style.width.split('vmin')[0]}/>
+        <Cell rank={cell.rank} file={cell.file} piece={cell.piece} size={board.style.width.split('vmin')[0]}/>
     {/each}
 </div>
 

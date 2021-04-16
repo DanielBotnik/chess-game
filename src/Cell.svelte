@@ -4,6 +4,7 @@ import { onMount } from "svelte";
 
 export let rank;
 export let file;
+export let piece;
 export let size;
 
 let cell = null;
@@ -56,6 +57,9 @@ function numberToLetter(num){
 </style>
 
 <div id='cell' bind:this={cell} class={(rank + file) % 2 === 0 ? 'blackcell' : 'whitecell'}>
+    {#if piece !== null}
+        <img src='https://upload.wikimedia.org/wikipedia/commons/f/f0/Chess_kdt45.svg'> 
+    {/if}
     {#if rank === 1}
         <div class='filenumber'>
             {numberToLetter(file)}        
