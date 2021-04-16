@@ -24,8 +24,28 @@
     });
 
     function init_board(cells){
-        for(var i = 8 ; i < 16 ; i++)
-            cells[i].piece = {color:'w',type:'pawn'};
+        for(var i = 8 ; i < 16 ; i++) {
+            cells[63-i].piece = {color:'w',type:'pawn'};
+            cells[i].piece = {color:'b',type:'pawn'};
+        }
+
+        cells[0].piece = {color:'b',type:'rook'};
+        cells[7].piece = {color:'b',type:'rook'};
+        cells[1].piece = {color:'b',type:'bishop'};
+        cells[6].piece = {color:'b',type:'bishop'};
+        cells[2].piece = {color:'b',type:'knight'};
+        cells[5].piece = {color:'b',type:'knight'};
+        cells[3].piece = {color:'b',type:'queen'};
+        cells[4].piece = {color:'b',type:'king'};
+
+        cells[63].piece = {color:'w',type:'rook'};
+        cells[56].piece = {color:'w',type:'rook'};
+        cells[62].piece = {color:'w',type:'bishop'};
+        cells[57].piece = {color:'w',type:'bishop'};
+        cells[61].piece = {color:'w',type:'knight'};
+        cells[58].piece = {color:'w',type:'knight'};
+        cells[59].piece = {color:'w',type:'queen'};
+        cells[60].piece = {color:'w',type:'king'};
     }
 
     

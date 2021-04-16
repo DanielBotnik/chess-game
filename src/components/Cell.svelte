@@ -25,6 +25,9 @@ function numberToLetter(num){
     $whiteColor: #FDE9C1;
 
     .whitecell {
+        display:flex;
+        justify-content: center;
+        align-items: center;
         background-color: $whiteColor;
         position: relative;
         
@@ -33,6 +36,9 @@ function numberToLetter(num){
         }
     }
     .blackcell{
+        display:flex;
+        justify-content: center;
+        align-items: center;
         background-color: $blackColor;
         position: relative;
         
@@ -56,9 +62,9 @@ function numberToLetter(num){
     }
 </style>
 
-<div id='cell' bind:this={cell} class={(rank + file) % 2 === 0 ? 'blackcell' : 'whitecell'}>
+<div bind:this={cell} class={(rank + file) % 2 === 0 ? 'blackcell' : 'whitecell'}>
     {#if piece !== null}
-        <img src='https://upload.wikimedia.org/wikipedia/commons/f/f0/Chess_kdt45.svg'> 
+        <img class='piecesvg' src='images/{piece.color}_{piece.type}.svg' alt='3'> 
     {/if}
     {#if rank === 1}
         <div class='filenumber'>
