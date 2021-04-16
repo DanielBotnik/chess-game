@@ -11,8 +11,8 @@
         board.style.height = `calc(${size}vmin + 2px)`;
 
         cells = Array.from({length: 64},(_,index) => {
-            const rank = Math.floor(index / 8) + 1;
-            const file = 8 - (index % 8);
+            const rank = 7 - Math.floor(index / 8) + 1;
+            const file = 1 + (index % 8);
             const cell = {
                 rank,
                 file,
@@ -35,7 +35,7 @@
 
 <style>
     .board {
-        border: 2px solid red;
+        border: 2px solid #926B39;
         display:grid;
         grid-template-columns: repeat(8,1fr);
         grid-template-rows: repeat(8,1fr);
