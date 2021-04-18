@@ -1,9 +1,10 @@
 <script defer>
-    import Cell from './Cell.svelte'
     import { onMount } from "svelte";
-
+    import {Pawn} from '../pieces/pawn.js';
     export let size;
     let board = null;
+    let clickedDiv = null;
+    let possibleMoveCells = [];
     var cells = [];
 
     onMount(() => {
@@ -16,17 +17,23 @@
             const cell = {
                 rank: rank,
                 file: file,
+                color: (rank+file) % 2 === 0 ? 'black' : 'white',
                 piece: null,
+                div: null,
             };
             return cell;
         });
         init_board(cells);
     });
 
+    function numberToLetter(num){
+        return String.fromCharCode(96 + num);
+    }
+
     function init_board(cells){
         for(var i = 8 ; i < 16 ; i++) {
-            cells[63-i].piece = {color:'w',type:'pawn'};
-            cells[i].piece = {color:'b',type:'pawn'};
+            cells[63-i].piece = new Pawn('w',Math.floor((63-i) / 8) + 1,((63-i) % 8) + 1);
+            cells[i].piece = new Pawn('b',Math.floor(i / 8) + 1,(i % 8) + 1);
         }
 
         cells[0].piece = {color:'b',type:'rook'};
@@ -48,22 +55,127 @@
         cells[60].piece = {color:'w',type:'king'};
     }
 
-    
+    function onPieceClick(cell){
+        if(cell.piece === null)
+            return;
+        if(cell.div.classList.contains(`${cell.color}cellclicked`)) {
+            cell.div.classList.remove(`${cell.color}cellclicked`);
+            clickedDiv = null;
+        }
+        else {
+            clickedDiv?.classList.remove('whitecellclicked','blackcellclicked');
+            cell.div.classList.add(`${cell.color}cellclicked`);
+            clickedDiv = cell.div;
+        }
+        showMoves(cell);
+    }
+
+    function showMoves(cell){
+        var row = 8 - cell.rank;
+        var col = cell.file - 1;
+        if(cell.piece.type === 'pawn'){
+            cell.piece.getMoves().forEach((move) => {
+                possibleMoveCells.push(cells[move]);
+            });
+        }
+    }
+
 </script>
 
 
 <div class='board' bind:this={board}>
     {#each cells as cell}
-        <Cell rank={cell.rank} file={cell.file} piece={cell.piece} size={board.style.width.split('vmin')[0]}/>
+        <div bind:this={cell.div} class={`${cell.color}cell`} on:click={() => {onPieceClick(cell)}}>
+            {#if cell.piece !== null}
+                <img class='piecesvg' src='images/{cell.piece.color}_{cell.piece.type}.svg' alt=''> 
+            {/if}
+            {#if cell.rank === 1}
+                <span class='filenumber'>
+                    {numberToLetter(cell.file)}        
+                </span>
+            {/if}
+            {#if cell.file === 8}
+                <span class='ranknumber'>
+                    {cell.rank}
+                </span>
+            {/if}
+            {#if cell.rank === 4 && cell.file === 4}
+                <span class='move-location'></span>
+            {/if}
+        </div>
     {/each}
 </div>
 
 
-<style>
+<style type="scss">
+    
+    $blackColor: #926B38;
+    $whiteColor: #FDE9C1;
+    $whiteColorClicked: #B5FD90;
+    $blackColorClicked: #D3AAEF; 
+    
     .board {
         border: 2px solid #926B39;
         display:grid;
         grid-template-columns: repeat(8,1fr);
         grid-template-rows: repeat(8,1fr);
     }
+
+    .whitecell {
+        display:flex;
+        justify-content: center;
+        align-items: center;
+        background-color: $whiteColor;
+        position: relative;
+        
+        span {
+            color: $blackColor;
+        }
+    }
+    .blackcell{
+        display:flex;
+        justify-content: center;
+        align-items: center;
+        background-color: $blackColor;
+        position: relative;
+        
+        span {
+            color: $whiteColor;
+        }
+    }
+
+    .filenumber {
+        position: absolute;
+        bottom:0.2vmin;
+        left:0.4vmin;
+        font-size:2vmin;
+    }
+
+    .ranknumber {
+        position: absolute;
+        right: 0.4vmin;
+        top: 0.3vmin;
+        font-size: 2vmin;
+    }
+
+    .piecesvg {
+        min-height: 100%;
+        min-width: 100%;
+    }
+
+    .whitecellclicked {
+        background-color: $whiteColorClicked;
+    }
+
+    .blackcellclicked {
+        background-color: $blackColorClicked;
+    }
+
+    .move-location {
+        height: 35%;
+        width: 35%;
+        border-radius: 50%;
+        background:black;
+    }
+
 </style>

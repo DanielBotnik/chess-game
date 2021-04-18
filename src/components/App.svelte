@@ -4,5 +4,5 @@
 	
 </script>
 <div>
-	<Board size={60}/>
+	<Board size={70}/>
 </div>
