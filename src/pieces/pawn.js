@@ -7,10 +7,36 @@ export class Pawn {
         this.hasMoved = false;
     }
 
-    getMoves(board){
-        var moves = [(this.rank-2)*8 + (this.file - 1)];
-        if(!this.hasMoved){
-            moves.push((this.file - 1) + (this.rank-3) * 8);
+    getMoves(board) {
+        var rank = this.rank - 1;
+        var file = this.file - 1;
+        var moves = [];
+        var moveDirection = this.color === 'w' ? 1 : -1;
+        if(!board[rank+moveDirection][file].piece){
+            moves.push({
+                i: rank+moveDirection,
+                j: file,
+            });
+        }
+        if(!this.hasMoved && !board[rank+moveDirection*2][file].piece){
+            moves.push({
+                i: rank+moveDirection*2,
+                j: file,
+            });
+        }
+        if(board[rank+moveDirection][file+1]?.piece && 
+            board[rank+moveDirection][file+1].piece?.color != color){
+            moves.push({
+                i: rank+moveDirection,
+                j: file+1,
+            })
+        }
+        if(board[rank+moveDirection][file-1]?.piece && 
+            board[rank+moveDirection][file-1].piece?.color != color){
+            moves.push({
+                i: rank+moveDirection,
+                j: file-1,
+            })
         }
         return moves;
     }

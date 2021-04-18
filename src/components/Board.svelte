@@ -1,6 +1,7 @@
 <script defer>
     import { onMount } from "svelte";
     import {Pawn} from '../pieces/pawn.js';
+import { Rook } from "../pieces/rook.js";
     export let size;
     let board = null;
     let clickedDiv = null;
@@ -10,19 +11,23 @@
     onMount(() => {
         board.style.width = `calc(${size}vmin + 2px)`;
         board.style.height = `calc(${size}vmin + 2px)`;
-
-        cells = Array.from({length: 64},(_,index) => {
-            const rank = 7 - Math.floor(index / 8) + 1;
-            const file = 1 + (index % 8);
-            const cell = {
-                rank: rank,
-                file: file,
-                color: (rank+file) % 2 === 0 ? 'black' : 'white',
-                piece: null,
-                div: null,
-            };
-            return cell;
+        Array.from({length: 8},(_) => {
+            cells.push([]);
         });
+        Array.from({length: 8},(_,i) => {
+            Array.from({length: 8},(_,j) => {
+                cells[7-i].push({
+                    rank: i+1,
+                    file: j+1,
+                    color: (i+j) % 2 === 0 ? 'black' : 'white',
+                    piece: null,
+                    div: null,
+                });
+            });
+        });
+        cells.reverse();
+        // This is the must stupidest line of code I've ever written
+        cells=cells;
         init_board(cells);
     });
 
@@ -31,38 +36,48 @@
     }
 
     function init_board(cells){
-        for(var i = 8 ; i < 16 ; i++) {
-            cells[63-i].piece = new Pawn('w',Math.floor((63-i) / 8) + 1,((63-i) % 8) + 1);
-            cells[i].piece = new Pawn('b',Math.floor(i / 8) + 1,(i % 8) + 1);
+        for(var i = 0 ; i < 8 ; i++) {
+            cells[6][i].piece = new Pawn('b',7,i+1);
+            cells[1][i].piece = new Pawn('w',2,i+1);
         }
 
-        cells[0].piece = {color:'b',type:'rook'};
-        cells[7].piece = {color:'b',type:'rook'};
-        cells[1].piece = {color:'b',type:'bishop'};
-        cells[6].piece = {color:'b',type:'bishop'};
-        cells[2].piece = {color:'b',type:'knight'};
-        cells[5].piece = {color:'b',type:'knight'};
-        cells[3].piece = {color:'b',type:'queen'};
-        cells[4].piece = {color:'b',type:'king'};
+        cells[0][0].piece = new Rook('w',1,1);
+        cells[0][7].piece = new Rook('w',1,8);
+        cells[0][1].piece = {color:'w',type:'bishop'};
+        cells[0][6].piece = {color:'w',type:'bishop'};
+        cells[0][2].piece = {color:'w',type:'knight'};
+        cells[0][5].piece = {color:'w',type:'knight'};
+        cells[0][3].piece = {color:'W',type:'queen'};
+        cells[0][4].piece = {color:'w',type:'king'};
 
-        cells[63].piece = {color:'w',type:'rook'};
-        cells[56].piece = {color:'w',type:'rook'};
-        cells[62].piece = {color:'w',type:'bishop'};
-        cells[57].piece = {color:'w',type:'bishop'};
-        cells[61].piece = {color:'w',type:'knight'};
-        cells[58].piece = {color:'w',type:'knight'};
-        cells[59].piece = {color:'w',type:'queen'};
-        cells[60].piece = {color:'w',type:'king'};
+        cells[7][0].piece = new Rook('b',1,8);
+        cells[7][7].piece = new Rook('b',1,1);
+        cells[7][1].piece = {color:'b',type:'bishop'};
+        cells[7][6].piece = {color:'b',type:'bishop'};
+        cells[7][2].piece = {color:'b',type:'knight'};
+        cells[7][5].piece = {color:'b',type:'knight'};
+        cells[7][3].piece = {color:'b',type:'queen'};
+        cells[7][4].piece = {color:'b',type:'king'};
     }
 
-    function onPieceClick(cell){
-        if(cell.piece === null)
-            return;
-        if(cell.div.classList.contains(`${cell.color}cellclicked`)) {
+    function onCellClick(cell){
+        if(cell.piece === null || cell.div.classList.contains(`${cell.color}cellclicked`))
+        {
+            console.log('hi');
+            possibleMoveCells.forEach((cell) => {
+                cell.div.querySelector('.move-location').remove();
+                console.log(cell.div.querySelector('.move-location'));
+            });
             cell.div.classList.remove(`${cell.color}cellclicked`);
+            clickedDiv?.classList.remove('whitecellclicked','blackcellclicked');
             clickedDiv = null;
         }
         else {
+            console.log('bi');
+            possibleMoveCells.forEach((cell) => {
+                cell.div.querySelector('.move-location').remove();
+            });
+            possibleMoveCells.length = [];
             clickedDiv?.classList.remove('whitecellclicked','blackcellclicked');
             cell.div.classList.add(`${cell.color}cellclicked`);
             clickedDiv = cell.div;
@@ -71,11 +86,13 @@
     }
 
     function showMoves(cell){
-        var row = 8 - cell.rank;
-        var col = cell.file - 1;
-        if(cell.piece.type === 'pawn'){
-            cell.piece.getMoves().forEach((move) => {
-                possibleMoveCells.push(cells[move]);
+        if(cell.piece !== null){
+            cell.piece.getMoves(cells)
+            cell.piece.getMoves(cells).forEach((move) => {
+               var moveSpan = document.createElement('span');
+               moveSpan.classList.add('move-location');
+               cells[move.i][move.j].div.appendChild(moveSpan);
+               possibleMoveCells.push(cells[move.i][move.j]);
             });
         }
     }
@@ -84,8 +101,9 @@
 
 
 <div class='board' bind:this={board}>
-    {#each cells as cell}
-        <div bind:this={cell.div} class={`${cell.color}cell`} on:click={() => {onPieceClick(cell)}}>
+    {#each [...cells].reverse() as row}
+        {#each row as cell}
+        <div bind:this={cell.div} class={`${cell.color}cell`} on:click={() => {onCellClick(cell)}}>
             {#if cell.piece !== null}
                 <img class='piecesvg' src='images/{cell.piece.color}_{cell.piece.type}.svg' alt=''> 
             {/if}
@@ -99,10 +117,8 @@
                     {cell.rank}
                 </span>
             {/if}
-            {#if cell.rank === 4 && cell.file === 4}
-                <span class='move-location'></span>
-            {/if}
         </div>
+        {/each}
     {/each}
 </div>
 
@@ -171,7 +187,7 @@
         background-color: $blackColorClicked;
     }
 
-    .move-location {
+    :global(.move-location) {
         height: 35%;
         width: 35%;
         border-radius: 50%;
