@@ -1,9 +1,9 @@
 export class Pawn {
+    
     constructor(color,rank,file) {
         this.color = color;
         this.rank = rank;
         this.file = file;
-        this.type = 'pawn';
         this.hasMoved = false;
     }
 
@@ -25,14 +25,14 @@ export class Pawn {
             });
         }
         if(board[rank+moveDirection][file+1]?.piece && 
-            board[rank+moveDirection][file+1].piece?.color != color){
+            board[rank+moveDirection][file+1].piece?.color != this.color){
             moves.push({
                 i: rank+moveDirection,
                 j: file+1,
             })
         }
         if(board[rank+moveDirection][file-1]?.piece && 
-            board[rank+moveDirection][file-1].piece?.color != color){
+            board[rank+moveDirection][file-1].piece?.color != this.color){
             moves.push({
                 i: rank+moveDirection,
                 j: file-1,

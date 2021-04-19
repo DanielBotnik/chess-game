@@ -1,9 +1,11 @@
 <script defer>
     import { onMount } from "svelte";
-import { clear_loops } from "svelte/internal";
+    import { Bishop } from "../pieces/bishop.js";
     import { Knight } from "../pieces/knight.js";
     import { Pawn } from '../pieces/pawn.js';
+    import { Queen } from "../pieces/queen.js";
     import { Rook } from "../pieces/rook.js";
+    import { King } from '../pieces/king'
     export let size;
     let board = null;
     let clickedDiv = null;
@@ -42,30 +44,33 @@ import { clear_loops } from "svelte/internal";
             cells[6][i].piece = new Pawn('b',7,i+1);
             cells[1][i].piece = new Pawn('w',2,i+1);
         }
-
         cells[0][0].piece = new Rook('w',1,1);
         cells[0][7].piece = new Rook('w',1,8);
-        cells[0][1].piece = {color:'w',type:'bishop'};
-        cells[0][6].piece = {color:'w',type:'bishop'};
+        cells[0][1].piece = new Bishop('w',1,2);
+        cells[0][6].piece = new Bishop('w',1,7);
         cells[0][2].piece = new Knight('w',1,3);
         cells[0][5].piece = new Knight('w',1,6);
-        cells[0][3].piece = {color:'W',type:'queen'};
-        cells[0][4].piece = {color:'w',type:'king'};
+        cells[0][3].piece = new Queen('w',1,4);
+        cells[0][4].piece = new King('w',1,5);
 
         cells[7][0].piece = new Rook('b',8,1);
         cells[7][7].piece = new Rook('b',8,8);
-        cells[7][1].piece = {color:'b',type:'bishop'};
-        cells[7][6].piece = {color:'b',type:'bishop'};
-        cells[7][2].piece = new Knight('w',8,3);
-        cells[7][5].piece = new Knight('w',8,6);
-        cells[7][3].piece = {color:'b',type:'queen'};
-        cells[7][4].piece = {color:'b',type:'king'};
+        cells[7][1].piece = new Bishop('b',8,2);
+        cells[7][6].piece = new Bishop('b',8,7);
+        cells[7][2].piece = new Knight('b',8,3);
+        cells[7][5].piece = new Knight('b',8,6);
+        cells[7][3].piece = new Queen('b',8,4);
+        cells[7][4].piece = new King('b',8,5);
     }
 
     function clearPossibleMoves(){
         possibleMoveCells.forEach((cell) => {
             cell.div.querySelector('.move-location')?.remove();
         })
+    }
+
+    function getPieceType(piece){
+        return piece.constructor.name.toLowerCase();
     }
 
     function onCellClick(cell){
@@ -106,7 +111,7 @@ import { clear_loops } from "svelte/internal";
         {#each row as cell}
         <div bind:this={cell.div} class={`${cell.color}cell`} on:click={() => {onCellClick(cell)}}>
             {#if cell.piece !== null}
-                <img class='piecesvg' src='images/{cell.piece.color}_{cell.piece.type}.svg' alt=''> 
+                <img class='piecesvg' src='images/{cell.piece.color}_{getPieceType(cell.piece)}.svg' alt=''> 
             {/if}
             {#if cell.rank === 1}
                 <span class='filenumber'>

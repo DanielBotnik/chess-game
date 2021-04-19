@@ -1,6 +1,6 @@
-export class Knight {
+export class Queen {
     
-    constructor(color,rank,file){
+    constructor(color,rank,file) {
         this.color = color;
         this.rank = rank;
         this.file = file;
@@ -10,8 +10,66 @@ export class Knight {
         var rank = this.rank - 1;
         var file = this.file - 1;
         var moves = [];
-        var leftUp,rightUp,leftDown,rightDown;
-        leftUp = rightUp = leftDown = rightDown = 1;
+        var up,down,left,right,leftUp,rightUp,leftDown,rightDown;
+        up = down = left = right = leftUp = rightUp = leftDown = rightDown = 1;
+        while(board[rank+up] && !board[rank+up][file].piece){
+            moves.push({
+                i:rank+up,
+                j:file,
+            });
+            up++;
+        }
+        if(board[rank+up] && board[rank+up][file].piece &&
+            board[rank+up][file].piece.color != this.color){
+                moves.push({
+                    i:rank+up,
+                    j:file
+                });
+        }
+        while(board[rank-down] && !board[rank-down][file].piece){
+            moves.push({
+                i:rank-down,
+                j:file,
+            });
+            down++;
+        }
+        if(board[rank-down] && board[rank-down][file].piece &&
+            board[rank-down][file].piece.color != this.color){
+                moves.push({
+                    i:rank-down,
+                    j:file
+                });
+        }
+        while(board[rank][file+left] && !board[rank][file+left].piece){
+            console.log(board[rank][file+left])
+            moves.push({
+                i:rank,
+                j:file+left,
+            });
+            left++;
+        }
+        if(board[rank][file+left] && board[rank][file+left].piece &&
+            board[rank][file+left].piece.color != this.color){
+                moves.push({
+                    i:rank,
+                    j:file+left
+                });
+        }
+        while(board[rank][file-right] && !board[rank][file-right].piece){
+            console.log(board[rank][file-right])
+            moves.push({
+                i:rank,
+                j:file-right,
+            });
+            right++;
+        }
+        if(board[rank][file-right] && board[rank][file-right].piece &&
+            board[rank][file-right].piece.color != this.color){
+                moves.push({
+                    i:rank,
+                    j:file-right
+                });
+        }
         while(board[rank+rightUp] && board[rank+rightUp][file+rightUp]?.piece === null){
             moves.push({
                 i: rank+rightUp,
@@ -70,5 +128,4 @@ export class Knight {
         }
         return moves;
     }
-
 }

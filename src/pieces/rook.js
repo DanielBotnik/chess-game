@@ -1,9 +1,9 @@
 export class Rook {
+    
     constructor(color,rank,file){
         this.color = color;
         this.rank = rank;
         this.file = file;
-        this.type = 'rook';
         this.hasMoved = false;
     }
     
