@@ -13,20 +13,62 @@ export class Rook {
         var moves = [];
         var up, down, left, right;
         up = down = left = right = 1;
-        var moveDirection = this.color === 'w' ? 1 : -1;
-        while(!board[rank+up*moveDirection][file]?.piece){
+        while(board[rank+up] && !board[rank+up][file].piece){
             moves.push({
                 i:rank+up,
                 j:file,
             });
             up++;
-            //console.log(moves);
         }
-        if(board[rank+up][file]?.piece &&
+        if(board[rank+up] && board[rank+up][file].piece &&
             board[rank+up][file].piece.color != this.color){
                 moves.push({
                     i:rank+up,
                     j:file
+                });
+        }
+        while(board[rank-down] && !board[rank-down][file].piece){
+            moves.push({
+                i:rank-down,
+                j:file,
+            });
+            down++;
+        }
+        if(board[rank-down] && board[rank-down][file].piece &&
+            board[rank-down][file].piece.color != this.color){
+                moves.push({
+                    i:rank-down,
+                    j:file
+                });
+        }
+        while(board[rank][file+left] && !board[rank][file+left].piece){
+            console.log(board[rank][file+left])
+            moves.push({
+                i:rank,
+                j:file+left,
+            });
+            left++;
+        }
+        if(board[rank][file+left] && board[rank][file+left].piece &&
+            board[rank][file+left].piece.color != this.color){
+                moves.push({
+                    i:rank,
+                    j:file+left
+                });
+        }
+        while(board[rank][file-right] && !board[rank][file-right].piece){
+            console.log(board[rank][file-right])
+            moves.push({
+                i:rank,
+                j:file-right,
+            });
+            right++;
+        }
+        if(board[rank][file-right] && board[rank][file-right].piece &&
+            board[rank][file-right].piece.color != this.color){
+                moves.push({
+                    i:rank,
+                    j:file-right
                 });
         }
         return moves;

@@ -1,7 +1,9 @@
 <script defer>
     import { onMount } from "svelte";
-    import {Pawn} from '../pieces/pawn.js';
-import { Rook } from "../pieces/rook.js";
+import { clear_loops } from "svelte/internal";
+    import { Knight } from "../pieces/knight.js";
+    import { Pawn } from '../pieces/pawn.js';
+    import { Rook } from "../pieces/rook.js";
     export let size;
     let board = null;
     let clickedDiv = null;
@@ -45,44 +47,43 @@ import { Rook } from "../pieces/rook.js";
         cells[0][7].piece = new Rook('w',1,8);
         cells[0][1].piece = {color:'w',type:'bishop'};
         cells[0][6].piece = {color:'w',type:'bishop'};
-        cells[0][2].piece = {color:'w',type:'knight'};
-        cells[0][5].piece = {color:'w',type:'knight'};
+        cells[0][2].piece = new Knight('w',1,3);
+        cells[0][5].piece = new Knight('w',1,6);
         cells[0][3].piece = {color:'W',type:'queen'};
         cells[0][4].piece = {color:'w',type:'king'};
 
-        cells[7][0].piece = new Rook('b',1,8);
-        cells[7][7].piece = new Rook('b',1,1);
+        cells[7][0].piece = new Rook('b',8,1);
+        cells[7][7].piece = new Rook('b',8,8);
         cells[7][1].piece = {color:'b',type:'bishop'};
         cells[7][6].piece = {color:'b',type:'bishop'};
-        cells[7][2].piece = {color:'b',type:'knight'};
-        cells[7][5].piece = {color:'b',type:'knight'};
+        cells[7][2].piece = new Knight('w',8,3);
+        cells[7][5].piece = new Knight('w',8,6);
         cells[7][3].piece = {color:'b',type:'queen'};
         cells[7][4].piece = {color:'b',type:'king'};
+    }
+
+    function clearPossibleMoves(){
+        possibleMoveCells.forEach((cell) => {
+            cell.div.querySelector('.move-location')?.remove();
+        })
     }
 
     function onCellClick(cell){
         if(cell.piece === null || cell.div.classList.contains(`${cell.color}cellclicked`))
         {
-            console.log('hi');
-            possibleMoveCells.forEach((cell) => {
-                cell.div.querySelector('.move-location').remove();
-                console.log(cell.div.querySelector('.move-location'));
-            });
+            clearPossibleMoves();
             cell.div.classList.remove(`${cell.color}cellclicked`);
             clickedDiv?.classList.remove('whitecellclicked','blackcellclicked');
             clickedDiv = null;
         }
         else {
-            console.log('bi');
-            possibleMoveCells.forEach((cell) => {
-                cell.div.querySelector('.move-location').remove();
-            });
+            clearPossibleMoves();
             possibleMoveCells.length = [];
             clickedDiv?.classList.remove('whitecellclicked','blackcellclicked');
             cell.div.classList.add(`${cell.color}cellclicked`);
             clickedDiv = cell.div;
+            showMoves(cell);
         }
-        showMoves(cell);
     }
 
     function showMoves(cell){
@@ -175,8 +176,8 @@ import { Rook } from "../pieces/rook.js";
     }
 
     .piecesvg {
-        min-height: 100%;
-        min-width: 100%;
+        min-height: 20px;
+        min-width: 20px;
     }
 
     .whitecellclicked {
