@@ -1,9 +1,9 @@
-export class Rook {
+import { Piece } from './piece'
+
+export class Rook extends Piece{
     
     constructor(color,rank,file){
-        this.color = color;
-        this.rank = rank;
-        this.file = file;
+        super(color,rank,file);
         this.hasMoved = false;
     }
     

@@ -1,9 +1,9 @@
-export class Bishop {
+import { Piece } from './piece'
+
+export class Bishop extends Piece{
     
     constructor(color,rank,file){
-        this.color = color;
-        this.rank = rank;
-        this.file = file;
+        super(color,rank,file);
     }
 
     getMoves(board) {

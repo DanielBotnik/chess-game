@@ -1,4 +1,5 @@
 <script defer>
+
     import { onMount } from "svelte";
     import { Bishop } from "../pieces/bishop.js";
     import { Knight } from "../pieces/knight.js";
@@ -6,10 +7,15 @@
     import { Queen } from "../pieces/queen.js";
     import { Rook } from "../pieces/rook.js";
     import { King } from '../pieces/king'
+
     export let size;
     let board = null;
-    let clickedDiv = null;
+    let clickedCell = null;
     let possibleMoveCells = [];
+    let blackPieces = [];
+    let whitePieces = [];
+    let blackKing = null;
+    let whiteKing = null;
     var cells = [];
 
     onMount(() => {
@@ -42,7 +48,9 @@
     function init_board(cells){
         for(var i = 0 ; i < 8 ; i++) {
             cells[6][i].piece = new Pawn('b',7,i+1);
+            blackPieces.push(cells[6][i].piece);
             cells[1][i].piece = new Pawn('w',2,i+1);
+            whitePieces.push(cells[1][i].piece);
         }
         cells[0][0].piece = new Rook('w',1,1);
         cells[0][7].piece = new Rook('w',1,8);
@@ -52,6 +60,7 @@
         cells[0][5].piece = new Knight('w',1,6);
         cells[0][3].piece = new Queen('w',1,4);
         cells[0][4].piece = new King('w',1,5);
+        whiteKing = cells[0][4].piece;
 
         cells[7][0].piece = new Rook('b',8,1);
         cells[7][7].piece = new Rook('b',8,8);
@@ -61,12 +70,18 @@
         cells[7][5].piece = new Knight('b',8,6);
         cells[7][3].piece = new Queen('b',8,4);
         cells[7][4].piece = new King('b',8,5);
+        blackKing = cells[7][4].piece;
+
+        for(var i = 0 ; i < 8 ; i++){
+            blackPieces.push(cells[7][i].piece);
+            whitePieces.push(cells[0][i].piece);
+        }
     }
 
     function clearPossibleMoves(){
-        possibleMoveCells.forEach((cell) => {
+        for(var cell of possibleMoveCells)
             cell.div.querySelector('.move-location')?.remove();
-        })
+        possibleMoveCells.length = 0;
     }
 
     function getPieceType(piece){
@@ -74,33 +89,86 @@
     }
 
     function onCellClick(cell){
-        if(cell.piece === null || cell.div.classList.contains(`${cell.color}cellclicked`))
+        if([...cell.div.childNodes].map(node => node.className).includes('move-location')){
+            clearPossibleMoves();
+            movePieceTo(clickedCell,cell);
+            clearPossibleMoves();
+            clickedCell?.div.classList.remove('whitecellclicked','blackcellclicked');
+        }
+        else if(cell.piece === null || cell.div.classList.contains(`${cell.color}cellclicked`))
         {
             clearPossibleMoves();
             cell.div.classList.remove(`${cell.color}cellclicked`);
-            clickedDiv?.classList.remove('whitecellclicked','blackcellclicked');
-            clickedDiv = null;
+            clickedCell?.div.classList.remove('whitecellclicked','blackcellclicked');
+            clickedCell = null;
         }
         else {
             clearPossibleMoves();
-            possibleMoveCells.length = [];
-            clickedDiv?.classList.remove('whitecellclicked','blackcellclicked');
+            clickedCell?.div.classList.remove('whitecellclicked','blackcellclicked');
             cell.div.classList.add(`${cell.color}cellclicked`);
-            clickedDiv = cell.div;
+            clickedCell = cell;
             showMoves(cell);
         }
+        cells = cells;
     }
 
     function showMoves(cell){
-        if(cell.piece !== null){
-            cell.piece.getMoves(cells)
-            cell.piece.getMoves(cells).forEach((move) => {
-               var moveSpan = document.createElement('span');
-               moveSpan.classList.add('move-location');
-               cells[move.i][move.j].div.appendChild(moveSpan);
-               possibleMoveCells.push(cells[move.i][move.j]);
-            });
+        var legalMoves = [];
+        for(var move of cell.piece.getMoves(cells)) {
+            if(isMoveLegal(cell,move))
+                legalMoves.push(move);
         }
+        for(var move of legalMoves){
+            var moveSpan = document.createElement('span');
+            moveSpan.classList.add('move-location');
+            cells[move.i][move.j].div.appendChild(moveSpan);
+            possibleMoveCells.push(cells[move.i][move.j]);
+        }
+    }
+
+    function isMoveLegal(cell,move){
+        var pieceBefore = cells[move.i][move.j]?.piece;
+        if(pieceBefore) {
+            if(pieceBefore.color === 'w')
+                whitePieces = whitePieces.filter((piece) => {return pieceBefore !== piece});
+            else
+                blackPieces = blackPieces.filter((piece) => {return pieceBefore !== piece});
+        }
+        cell.piece.moveToCheck(cells,move);
+        var res = !isKingChecked(cells[move.i][move.j].piece.color);
+        cells[move.i][move.j].piece.moveToCheck(cells,{
+            i: cell.rank-1,
+            j: cell.file-1
+        });
+        cells[move.i][move.j].piece = pieceBefore;
+        if(pieceBefore) {
+            if(pieceBefore.color === 'w')
+                whitePieces.push(pieceBefore);
+            else
+                blackPieces.push(pieceBefore);
+        }
+        return res;
+        
+    }
+
+    function isKingChecked(color){
+        var kingToCheck = color === 'w' ? whiteKing : blackKing;
+        var enemiesToCheck = color === 'w' ? blackPieces : whitePieces;
+        for(var enemy of enemiesToCheck)
+            for(var move of enemy.getMoves(cells))
+                if(move.i === kingToCheck.rank-1 && move.j === kingToCheck.file-1) {
+                    return true;
+                }
+        return false;
+    }
+
+    function movePieceTo(pieceCell,moveToCell){
+        var audio = new Audio('https://interactive-examples.mdn.mozilla.net/media/cc0-audio/t-rex-roar.mp3');
+        pieceCell.piece.moveToReal(cells,{
+            i: moveToCell.rank-1,
+            j: moveToCell.file-1,
+        });
+        audio.play();
     }
 
 </script>

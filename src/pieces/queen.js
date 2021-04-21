@@ -1,9 +1,9 @@
-export class Queen {
+import { Piece } from './piece'
+
+export class Queen extends Piece{
     
     constructor(color,rank,file) {
-        this.color = color;
-        this.rank = rank;
-        this.file = file;
+        super(color,rank,file);
     }
 
     getMoves(board) {
@@ -41,7 +41,6 @@ export class Queen {
                 });
         }
         while(board[rank][file+left] && !board[rank][file+left].piece){
-            console.log(board[rank][file+left])
             moves.push({
                 i:rank,
                 j:file+left,
@@ -56,7 +55,6 @@ export class Queen {
                 });
         }
         while(board[rank][file-right] && !board[rank][file-right].piece){
-            console.log(board[rank][file-right])
             moves.push({
                 i:rank,
                 j:file-right,

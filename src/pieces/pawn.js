@@ -1,9 +1,9 @@
-export class Pawn {
+import { Piece } from './piece'
+
+export class Pawn extends Piece {
     
     constructor(color,rank,file) {
-        this.color = color;
-        this.rank = rank;
-        this.file = file;
+        super(color,rank,file);
         this.hasMoved = false;
     }
 
@@ -40,4 +40,10 @@ export class Pawn {
         }
         return moves;
     }
+
+    moveToReal(board,move){
+        super.moveToReal(board,move);
+        this.hasMoved = true;
+    }
+    
 }
