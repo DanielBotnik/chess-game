@@ -6,7 +6,7 @@
     import { Pawn } from '../pieces/pawn.js';
     import { Queen } from "../pieces/queen.js";
     import { Rook } from "../pieces/rook.js";
-    import { King } from '../pieces/king'
+    import { King } from '../pieces/king.js'
 
     export let size;
     let board = null;
