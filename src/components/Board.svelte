@@ -163,7 +163,14 @@
     }
 
     function movePieceTo(pieceCell,moveToCell){
-        var audio = new Audio('https://interactive-examples.mdn.mozilla.net/media/cc0-audio/t-rex-roar.mp3');
+        var audio = moveToCell.piece ? 
+        new Audio('sounds/public_sound_standard_Capture.ogg') : new Audio('sounds/public_sound_standard_Move.ogg');
+        if(moveToCell.piece) {
+            if(moveToCell.piece.color === 'w')
+                whitePieces = whitePieces.filter((piece) => {return moveToCell.piece !== piece});
+            else
+                blackPieces = blackPieces.filter((piece) => {return moveToCell.piece !== piece});
+        }
         pieceCell.piece.moveToReal(cells,{
             i: moveToCell.rank-1,
             j: moveToCell.file-1,
@@ -199,13 +206,13 @@
 
 <style type="scss">
     
-    $blackColor: #926B38;
+    $blackColor: #B58863;
     $whiteColor: #FDE9C1;
     $whiteColorClicked: #B5FD90;
     $blackColorClicked: #D3AAEF; 
     
     .board {
-        border: 2px solid #926B39;
+        border: 2px solid #B58863;
         display:grid;
         grid-template-columns: repeat(8,1fr);
         grid-template-rows: repeat(8,1fr);
