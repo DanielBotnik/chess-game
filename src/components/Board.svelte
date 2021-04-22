@@ -16,7 +16,7 @@
     let whitePieces = [];
     let blackKing = null;
     let whiteKing = null;
-    var cells = [];
+    let cells = [];
 
     onMount(() => {
         board.style.width = `calc(${size}vmin + 2px)`;
@@ -80,8 +80,9 @@
 
     function clearPossibleMoves(){
         for(var cell of possibleMoveCells)
-            cell.div.querySelector('.move-location')?.remove();
+            cell.div.querySelector(`.move-location${cell.piece ? '-piece' : ''}`)?.remove();
         possibleMoveCells.length = 0;
+        clickedCell?.div.classList.remove('whitecell-clicked','blackcell-clicked');
     }
 
     function getPieceType(piece){
@@ -89,23 +90,23 @@
     }
 
     function onCellClick(cell){
-        if([...cell.div.childNodes].map(node => node.className).includes('move-location')){
+        if([...cell.div.childNodes].map(node => node.className)
+        .includes(`move-location${cell.piece ? '-piece' : ''}`)) {
             clearPossibleMoves();
             movePieceTo(clickedCell,cell);
             clearPossibleMoves();
-            clickedCell?.div.classList.remove('whitecellclicked','blackcellclicked');
         }
-        else if(cell.piece === null || cell.div.classList.contains(`${cell.color}cellclicked`))
+        else if(cell.piece === null || cell.div.classList.contains(`${cell.color}cell-clicked`))
         {
             clearPossibleMoves();
-            cell.div.classList.remove(`${cell.color}cellclicked`);
-            clickedCell?.div.classList.remove('whitecellclicked','blackcellclicked');
+            cell.div.classList.remove(`${cell.color}cell-clicked`);
+            clickedCell?.div.classList.remove('whitecell-clicked','blackcell-clicked');
             clickedCell = null;
         }
         else {
             clearPossibleMoves();
-            clickedCell?.div.classList.remove('whitecellclicked','blackcellclicked');
-            cell.div.classList.add(`${cell.color}cellclicked`);
+            clickedCell?.div.classList.remove('whitecell-clicked','blackcell-clicked');
+            cell.div.classList.add(`${cell.color}cell-clicked`);
             clickedCell = cell;
             showMoves(cell);
         }
@@ -113,17 +114,29 @@
     }
 
     function showMoves(cell){
+        for(var move of getLegalMoves(cell)){
+            if(!cells[move.i][move.j].piece) {
+                var moveSpan = document.createElement('span');
+                moveSpan.classList.add('move-location');
+                cells[move.i][move.j].div.appendChild(moveSpan);
+                possibleMoveCells.push(cells[move.i][move.j]);
+            }
+            else {
+                var moveSpan = document.createElement('span');
+                moveSpan.classList.add('move-location-piece');
+                cells[move.i][move.j].div.appendChild(moveSpan);
+                possibleMoveCells.push(cells[move.i][move.j]);
+            }
+        }
+    }
+
+    function getLegalMoves(cell){
         var legalMoves = [];
-        for(var move of cell.piece.getMoves(cells)) {
+        for(var move of cell.piece.getMoves(cells)){
             if(isMoveLegal(cell,move))
                 legalMoves.push(move);
         }
-        for(var move of legalMoves){
-            var moveSpan = document.createElement('span');
-            moveSpan.classList.add('move-location');
-            cells[move.i][move.j].div.appendChild(moveSpan);
-            possibleMoveCells.push(cells[move.i][move.j]);
-        }
+        return legalMoves;
     }
 
     function isMoveLegal(cell,move){
@@ -156,9 +169,8 @@
         var enemiesToCheck = color === 'w' ? blackPieces : whitePieces;
         for(var enemy of enemiesToCheck)
             for(var move of enemy.getMoves(cells))
-                if(move.i === kingToCheck.rank-1 && move.j === kingToCheck.file-1) {
+                if(move.i === kingToCheck.rank-1 && move.j === kingToCheck.file-1)
                     return true;
-                }
         return false;
     }
 
@@ -178,6 +190,16 @@
         audio.play();
     }
 
+    //Is the color checked, for example if isCheckMate('w') === True ==> Black won
+    function isCheckMate(color) {
+        var piecesToCheck = color === 'w' ? whitePieces : blackPieces;
+        for(var piece of piecesToCheck) {
+            if(getLegalMoves(cells[piece.rank-1][piece.file-1]).length)
+                return false;
+        }
+        return true;
+    }
+
 </script>
 
 
@@ -186,7 +208,7 @@
         {#each row as cell}
         <div bind:this={cell.div} class={`${cell.color}cell`} on:click={() => {onCellClick(cell)}}>
             {#if cell.piece !== null}
-                <img class='piecesvg' src='images/{cell.piece.color}_{getPieceType(cell.piece)}.svg' alt=''> 
+                <img class='piecesvg' src='images/{cell.piece.color}_{getPieceType(cell.piece)}.svg' alt=''>
             {/if}
             {#if cell.rank === 1}
                 <span class='filenumber'>
@@ -209,7 +231,8 @@
     $blackColor: #B58863;
     $whiteColor: #FDE9C1;
     $whiteColorClicked: #B5FD90;
-    $blackColorClicked: #D3AAEF; 
+    $blackColorClicked: #D3AAEF;
+    $moveLocation: black;
     
     .board {
         border: 2px solid #B58863;
@@ -256,15 +279,16 @@
     }
 
     .piecesvg {
-        min-height: 20px;
-        min-width: 20px;
+        min-height: 100%;
+        min-width: 100%;
+        z-index: 1;
     }
 
-    .whitecellclicked {
+    .whitecell-clicked {
         background-color: $whiteColorClicked;
     }
 
-    .blackcellclicked {
+    .blackcell-clicked {
         background-color: $blackColorClicked;
     }
 
@@ -272,7 +296,22 @@
         height: 35%;
         width: 35%;
         border-radius: 50%;
-        background:black;
+        background:$moveLocation;
+    }
+
+    :global(.move-location-piece){
+        height:100%;
+        width:100%;
+        position:absolute;
+        background: radial-gradient(transparent 0%, transparent 79%, $moveLocation)
+    }
+
+    :global(.location-check){
+        height: 100%;
+        width: 100%;
+        position: absolute;
+        z-index: 0;
+        background: radial-gradient(ellipse at center, rgb(250, 75, 75) 0%, #e70000 25%, rgba(169,0,0,0) 89%, rgba(158,0,0,0) 100%);
     }
 
 </style>

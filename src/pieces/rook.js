@@ -42,7 +42,6 @@ export class Rook extends Piece{
                 });
         }
         while(board[rank][file+left] && !board[rank][file+left].piece){
-            console.log(board[rank][file+left])
             moves.push({
                 i:rank,
                 j:file+left,
@@ -57,7 +56,6 @@ export class Rook extends Piece{
                 });
         }
         while(board[rank][file-right] && !board[rank][file-right].piece){
-            console.log(board[rank][file-right])
             moves.push({
                 i:rank,
                 j:file-right,
