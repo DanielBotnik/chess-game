@@ -17,6 +17,7 @@
     let blackKing = null;
     let whiteKing = null;
     let cells = [];
+    let whiteTurn = true;
 
     onMount(() => {
         board.style.width = `calc(${size}vmin + 2px)`;
@@ -96,14 +97,15 @@
             movePieceTo(clickedCell,cell);
             clearPossibleMoves();
         }
-        else if(cell.piece === null || cell.div.classList.contains(`${cell.color}cell-clicked`))
-        {
+        else if(cell.piece === null || cell.div.classList.contains(`${cell.color}cell-clicked`)) {
             clearPossibleMoves();
             cell.div.classList.remove(`${cell.color}cell-clicked`);
             clickedCell?.div.classList.remove('whitecell-clicked','blackcell-clicked');
             clickedCell = null;
         }
         else {
+            if(cell.piece.color === 'w' !== whiteTurn)
+                return;
             clearPossibleMoves();
             clickedCell?.div.classList.remove('whitecell-clicked','blackcell-clicked');
             cell.div.classList.add(`${cell.color}cell-clicked`);
@@ -175,6 +177,10 @@
     }
 
     function movePieceTo(pieceCell,moveToCell){
+        if(pieceCell.color === 'w') 
+            cells[whiteKing.rank-1][whiteKing.file-1].div.querySelector('.location-check')?.remove();
+        else
+            cells[blackKing.rank-1][blackKing.file-1].div.querySelector('.location-check')?.remove();
         var audio = moveToCell.piece ? 
         new Audio('sounds/public_sound_standard_Capture.ogg') : new Audio('sounds/public_sound_standard_Move.ogg');
         if(moveToCell.piece) {
@@ -187,6 +193,27 @@
             i: moveToCell.rank-1,
             j: moveToCell.file-1,
         });
+        whiteTurn = !whiteTurn;
+        if(moveToCell.piece.color === 'w' && isKingChecked('b')) {
+            var checkSpan = document.createElement('span');
+            checkSpan.classList.add('location-check');
+            cells[blackKing.rank-1][blackKing.file-1].div.appendChild(checkSpan);
+            if(isCheckMate('b')){
+                audio = new Audio('sounds/public_sound_standard_Checkmate.ogg');
+                audio.play();
+                return;
+            }
+        }
+        else if(moveToCell.piece.color === 'b' && isKingChecked('w')) {
+            var checkSpan = document.createElement('span');
+            checkSpan.classList.add('location-check');
+            cells[whiteKing.rank-1][whiteKing.file-1].div.appendChild(checkSpan);
+            if(isCheckMate('w')){
+                audio = new Audio('sounds/public_sound_standard_Checkmate.ogg');
+                audio.play();
+                return;
+            }
+        }
         audio.play();
     }
 
