@@ -2,9 +2,9 @@ import { Piece } from './piece'
 
 export class King extends Piece{
     
-    constructor(color,rank,file) {
+    constructor(color,rank,file,hasMoved) {
         super(color,rank,file);
-        this.hasMoved = false;
+        this.hasMoved = !!hasMoved;
     }
 
     getMoves(board) {
@@ -51,18 +51,20 @@ export class King extends Piece{
                 i: rank-1,
                 j: file-1,
             });
-        if(!this.hasMoved){
+        if(!this.hasMoved && !this.isChecked(board)){
             if(board[rank][7].piece?.constructor?.name === 'Rook' && !board[rank][7].piece.hasMoved
-            && !board[rank][6].piece && !board[rank][6].piece)
+            && !board[rank][6].piece && !board[rank][5].piece)
                 moves.push({
                     i: rank,
                     j: 7,
+                    special: 'castling'
                 });
             if(board[rank][0].piece?.constructor?.name === 'Rook' && !board[rank][0].piece.hasMoved &&
             !board[rank][1].piece && !board[rank][2].piece && !board[rank][3].piece)
                 moves.push({
                     i: rank,
                     j: 0,
+                    special: 'castling'
                 });
         }
         return moves;
@@ -217,9 +219,9 @@ export class King extends Piece{
     }
 
     moveToCheck(board,move){
-        if(board[move.i][move.j].piece?.color === this.color && board[move.i][move.j].piece.constructor.name === 'Rook'){
+        if(move.special === 'castling'){
             if(move.j === 0){
-                board[move.i][move.j].piece.file = 5; 
+                board[move.i][move.j].piece.file = 4; 
                 board[this.rank-1][3].piece = board[move.i][move.j].piece;
                 board[this.rank-1][2].piece = this;
                 board[this.rank-1][this.file-1].piece = null;
@@ -239,7 +241,9 @@ export class King extends Piece{
     }
 
     moveToReal(board,move){
+        if(move.special === 'castling')
+            board[move.i][move.j].piece.hasMoved = true;
+        this.moveToCheck(board,move);
         this.hasMoved = true;
-        super.moveToReal(board,move);
     }
 }

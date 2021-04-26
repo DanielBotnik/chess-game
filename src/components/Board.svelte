@@ -21,6 +21,7 @@
     let whiteKing = null;
     let cells = [];
     let whiteTurn = true;
+    let enPassantPawn = null;
 
     onMount(() => {
         boardSide = color;
@@ -43,7 +44,7 @@
         cells.reverse();
         // This is the must stupidest line of code I've ever written
         cells=cells;
-        init_board(cells);
+        initBoardFromFEN(cells,'3K4/4p3/P1pP3P/7q/k7/4Pp2/P2pB1b1/3RR3');
     });
 
     function numberToLetter(num){
@@ -54,7 +55,7 @@
         return letter.charCodeAt(0) - 96;
     }
 
-    function init_board(cells){
+    function initBoard(cells){
         for(var i = 0 ; i < 8 ; i++) {
             cells[6][i].piece = new Pawn('b',7,i+1);
             blackPieces.push(cells[6][i].piece);
@@ -88,7 +89,6 @@
     }
 
     function clearPossibleMoves(){
-        console.log(whitePieces);
         for(var cell of possibleMoveCells) {
             cell.div.querySelector(`.move-location-${cell.piece ? 'piece-' : ''}${cell.color}`)?.remove();
         }
@@ -149,7 +149,7 @@
 
     function isMoveLegal(cell,move){
         var pieceBefore = cells[move.i][move.j]?.piece;
-        if(pieceBefore) {
+        if(pieceBefore && move.special !== 'castling') {
             if(pieceBefore.color === 'w')
                 whitePieces = whitePieces.filter((piece) => {return pieceBefore !== piece});
             else
@@ -158,12 +158,13 @@
         var pieceMoved = cell.piece;
         cell.piece.moveToCheck(cells,move);
         var res = !isKingChecked(pieceMoved.color);
-        if(!cells[move.i][move.j].piece) {
+        if(move.special === 'castling') {
             if(move.j === 7){
                 pieceMoved.moveToCheck(cells,{
                     i: pieceMoved.rank-1,
                     j: 4,
                 });
+                pieceBefore.file = 8;
                 cells[pieceMoved.rank-1][6].piece = null;
                 cells[pieceMoved.rank-1][5].piece = null;
             }
@@ -171,12 +172,19 @@
                 pieceMoved.moveToCheck(cells,{
                     i:pieceMoved.rank-1,
                     j:4
-                })
+                });
+                pieceBefore.file = 1;
                 cells[pieceMoved.rank-1][3].piece = null;
                 cells[pieceMoved.rank-1][2].piece = null;
             }
         }
-        else { 
+        else if(move.special === 'enPassant') {
+            pieceMoved.moveToCheck(cells, {
+                i:cell.rank-1,
+                j:cell.file-1,
+            });
+        }
+        else {
             cells[move.i][move.j].piece.moveToCheck(cells,{
                 i: cell.rank-1,
                 j: cell.file-1
@@ -201,12 +209,29 @@
 
     function movePieceTo(pieceCell,moveToCell){
         var pieceMoving = pieceCell.piece;
-        if(pieceCell.piece.color === 'w')
+        var audio = null;
+        //Handling En Passant
+        if(getPieceType(pieceMoving) === 'pawn' && Math.abs(moveToCell.rank-pieceCell.rank) === 2) {
+            if(enPassantPawn)
+                enPassantPawn.enPassant = false;
+            enPassantPawn = pieceMoving;
+        }
+        if(getPieceType(pieceMoving) === 'pawn' && moveToCell.file != pieceMoving.file && !moveToCell.piece){
+            if(pieceMoving.color === 'b')
+                whitePieces = whitePieces.filter((piece) => {return cells[moveToCell.rank][moveToCell.file-1].piece !== piece});
+            else
+                blackPieces = blackPieces.filter((piece) => {return cells[moveToCell.rank-2][moveToCell.file-1].piece !== piece});
+            cells[moveToCell.rank-(pieceMoving.color === 'w' ? 2 : 0)][moveToCell.file-1].piece = null;
+            audio = new Audio('sounds/public_sound_standard_Capture.ogg');
+        }
+        //End of handling En Passant
+        if(pieceMoving.color === 'w')
             cells[whiteKing.rank-1][whiteKing.file-1].div.querySelector('.location-check')?.remove();
         else
             cells[blackKing.rank-1][blackKing.file-1].div.querySelector('.location-check')?.remove();
-        var audio = moveToCell.piece && pieceMoving.color != moveToCell.piece.color ? 
-        new Audio('sounds/public_sound_standard_Capture.ogg') : new Audio('sounds/public_sound_standard_Move.ogg');
+        if(!audio)
+            audio = moveToCell.piece && pieceMoving.color != moveToCell.piece.color? 
+            new Audio('sounds/public_sound_standard_Capture.ogg') : new Audio('sounds/public_sound_standard_Move.ogg');
         if(moveToCell.piece && pieceMoving.color != moveToCell.piece.color) {
             if(moveToCell.piece.color === 'w')
                 whitePieces = whitePieces.filter((piece) => {return moveToCell.piece !== piece});
@@ -216,26 +241,18 @@
         pieceMoving.moveToReal(cells,{
             i: moveToCell.rank-1,
             j: moveToCell.file-1,
+            special: pieceMoving.color === moveToCell.piece?.color ? 'castling' : '',
         });
         whiteTurn = !whiteTurn;
-        if(pieceMoving.color === 'w' && isKingChecked('b')) {
+        if(enPassantPawn !== pieceMoving)
+            enPassantPawn.enPassant = false;
+        if(isKingChecked(pieceMoving.color === 'w' ? 'w' : 'b')){
             var checkSpan = document.createElement('span');
             checkSpan.classList.add('location-check');
-            cells[blackKing.rank-1][blackKing.file-1].div.appendChild(checkSpan);
-            if(isCheckMate('b')){
+            var checkedKing = pieceMoving.color === 'w' ? whiteKing : blackKing;
+            cells[checkedKing.rank-1][checkedKing.file-1].div.appendChild(checkSpan);
+            if(isCheckMate(checkedKing.color)) {
                 audio = new Audio('sounds/public_sound_standard_Checkmate.ogg');
-                audio.play();
-                return;
-            }
-        }
-        else if(pieceMoving.color === 'b' && isKingChecked('w')) {
-            var checkSpan = document.createElement('span');
-            checkSpan.classList.add('location-check');
-            cells[whiteKing.rank-1][whiteKing.file-1].div.appendChild(checkSpan);
-            if(isCheckMate('w')){
-                audio = new Audio('sounds/public_sound_standard_Checkmate.ogg');
-                audio.play();
-                return;
             }
         }
         audio.play();
@@ -268,6 +285,86 @@
         
 
     }
+
+    function initBoardFromFEN(cells,FENString){
+        var rank = 7;
+        var file = 0;
+        for(var i = 0 ; i < FENString.length && FENString[i] != ' ' ; i++){
+            switch(FENString[i]){
+                case 'P':
+                    cells[rank][file].piece = new Pawn('w',rank+1,file+1);
+                    whitePieces.push(cells[rank][file].piece);
+                    file++;
+                    break;
+                case 'N':
+                    cells[rank][file].piece = new Knight('w',rank+1,file+1);
+                    whitePieces.push(cells[rank][file].piece);
+                    file++;
+                    break;
+                case 'B':
+                    cells[rank][file].piece = new Bishop('w',rank+1,file+1);
+                    whitePieces.push(cells[rank][file].piece);
+                    file++;
+                    break;
+                case 'R':
+                    cells[rank][file].piece = new Rook('w',rank+1,file+1);
+                    whitePieces.push(cells[rank][file].piece);
+                    file++;
+                    break;
+                case 'Q':
+                    cells[rank][file].piece = new Queen('w',rank+1,file+1);
+                    whitePieces.push(cells[rank][file].piece);
+                    file++;
+                    break;
+                case 'K':
+                    cells[rank][file].piece = new King('w',rank+1,file+1);
+                    whitePieces.push(cells[rank][file].piece);
+                    whiteKing = cells[rank][file].piece;
+                    file++;
+                    break;
+                case 'p':
+                    cells[rank][file].piece = new Pawn('b',rank+1,file+1);
+                    blackPieces.push(cells[rank][file].piece);
+                    file++;
+                    break;
+                case 'n':
+                    cells[rank][file].piece = new Knight('b',rank+1,file+1);
+                    blackPieces.push(cells[rank][file].piece);
+                    file++;
+                    break;
+                case 'b':
+                    cells[rank][file].piece = new Bishop('b',rank+1,file+1);
+                    blackPieces.push(cells[rank][file].piece);
+                    file++;
+                    break;
+                case 'r':
+                    cells[rank][file].piece = new Rook('b',rank+1,file+1);
+                    blackPieces.push(cells[rank][file].piece);
+                    file++;
+                    break;
+                case 'q':
+                    cells[rank][file].piece = new Queen('b',rank+1,file+1);
+                    blackPieces.push(cells[rank][file].piece);
+                    file++;
+                    break;
+                case 'k':
+                    cells[rank][file].piece = new King('b',rank+1,file+1);
+                    blackPieces.push(cells[rank][file].piece);
+                    blackKing = cells[rank][file].piece;
+                    file++;
+                    break;
+                case '/':
+                    file=0;
+                    rank--;
+                    break;
+                default:
+                    if(!isNaN(parseInt(FENString[i])))
+                        file+=parseInt(FENString[i]);
+            }
+        }
+
+    }
+
 </script>
 
 

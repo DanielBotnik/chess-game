@@ -2,9 +2,9 @@ import { Piece } from './piece'
 
 export class Rook extends Piece{
     
-    constructor(color,rank,file){
+    constructor(color,rank,file,hasMoved){
         super(color,rank,file);
-        this.hasMoved = false;
+        this.hasMoved = !!hasMoved;
     }
     
     getMoves(board) {
