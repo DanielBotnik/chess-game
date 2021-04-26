@@ -42,8 +42,8 @@ export class Pawn extends Piece {
     }
 
     moveToReal(board,move){
-        super.moveToReal(board,move);
         this.hasMoved = true;
+        super.moveToReal(board,move);
     }
     
 }

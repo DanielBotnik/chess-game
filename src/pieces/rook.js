@@ -71,4 +71,9 @@ export class Rook extends Piece{
         }
         return moves;
     }
+
+    moveToReal(board,move){
+        this.hasMoved = true;
+        super.moveToReal(board,move);
+    }
 }

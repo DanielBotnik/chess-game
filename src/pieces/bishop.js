@@ -10,46 +10,65 @@ export class Bishop extends Piece{
         var rank = this.rank - 1;
         var file = this.file - 1;
         var moves = [];
-        if(board[rank+2] && board[rank+2][file+1] && board[rank+2][file+1].piece?.color != this.color)
+        var leftUp,rightUp,leftDown,rightDown;
+        leftUp = rightUp = leftDown = rightDown = 1;
+        while(board[rank+rightUp] && board[rank+rightUp][file+rightUp]?.piece === null){
             moves.push({
-                i: rank+2,
-                j: file+1,
+                i: rank+rightUp,
+                j: file+rightUp,
             });
-        if(board[rank+2] && board[rank+2][file-1] && board[rank+2][file-1].piece?.color != this.color)
+            rightUp++;
+        }
+        if(board[rank+rightUp] && board[rank+rightUp][file+rightUp]?.piece
+            && board[rank+rightUp][file+rightUp].piece.color != this.color){
+                moves.push({
+                    i: rank+rightUp,
+                    j: file+rightUp,
+                });
+        }
+        while(board[rank+leftUp] && board[rank+leftUp][file-leftUp]?.piece === null){
             moves.push({
-                i: rank+2,
-                j: file-1,
+                i: rank+leftUp,
+                j: file-leftUp,
             });
-        if(board[rank-2] && board[rank-2][file+1] && board[rank-2][file+1].piece?.color != this.color)
+            leftUp++;
+        }
+        if(board[rank+leftUp] && board[rank+leftUp][file-leftUp]?.piece
+            && board[rank+leftUp][file-leftUp].piece.color != this.color){
+                moves.push({
+                    i: rank+leftUp,
+                    j: file-leftUp,
+                });
+        }
+        while(board[rank-rightDown] && board[rank-rightDown][file+rightDown]?.piece === null){
             moves.push({
-                i: rank-2,
-                j: file+1,
+                i: rank-rightDown,
+                j: file+rightDown,
             });
-        if(board[rank-2] && board[rank-2][file-1] && board[rank-2][file-1].piece?.color != this.color)
+            rightDown++;
+        }
+        if(board[rank-rightDown] && board[rank-rightDown][file+rightDown]?.piece
+            && board[rank-rightDown][file+rightDown].piece.color != this.color){
+                moves.push({
+                    i: rank-rightDown,
+                    j: file+rightDown,
+                });
+        }
+        while(board[rank-leftDown] && board[rank-leftDown][file-leftDown]?.piece === null){
             moves.push({
-                i: rank-2,
-                j: file-1,
+                i: rank-leftDown,
+                j: file-leftDown,
             });
-        if(board[rank+1] && board[rank+1][file+2] && board[rank+1][file+2].piece?.color != this.color)
-            moves.push({
-                i: rank+1,
-                j: file+2,
-            });
-        if(board[rank-1] && board[rank-1][file+2] && board[rank-1][file+2].piece?.color != this.color)
-            moves.push({
-                i: rank-1,
-                j: file+2,
-            });  
-        if(board[rank+1] && board[rank+1][file-2] && board[rank+1][file-2].piece?.color != this.color)
-            moves.push({
-                i: rank+1,
-                j: file-2,
-            });
-        if(board[rank-1] && board[rank-1][file-2] && board[rank-1][file-2].piece?.color != this.color)
-            moves.push({
-                i: rank-1,
-                j: file-2,
-            });
+            leftDown++;
+        }
+        if(board[rank-leftDown] && board[rank-leftDown][file-leftDown]?.piece
+            && board[rank-leftDown][file-leftDown].piece.color != this.color){
+                moves.push({
+                    i: rank-leftDown,
+                    j: file-leftDown,
+                });
+        }
         return moves;
     }
+
 }
