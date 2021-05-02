@@ -9,12 +9,15 @@
     import { King } from "../pieces/king.js";
     
     export var size;
-    export var color;
+    export var sendMoveToServer;
 
     let board = null;
-    let boardSide;
+    let boardSide = 'w';
+    let color;
     let clickedCell = null;
+    let pawnPromoting = null;
     let possibleMoveCells = [];
+    let promotingCells = [];
     let blackPieces = [];
     let whitePieces = [];
     let blackKing = null;
@@ -24,7 +27,6 @@
     let enPassantPawn = null;
 
     onMount(() => {
-        boardSide = color;
         board.style.width = `calc(${size}vmin + 2px)`;
         board.style.height = `calc(${size}vmin + 2px)`;
         Array.from({length: 8},(_) => {
@@ -38,13 +40,17 @@
                     color: (i+j) % 2 === 0 ? 'black' : 'white',
                     piece: null,
                     div: null,
+                    clicked: false,
+                    checked: false,
+                    possibleMove: false,
+                    promote: null,
                 });
             });
         });
         cells.reverse();
         // This is the must stupidest line of code I've ever written
         cells=cells;
-        initBoardFromFEN(cells,'3K4/4p3/P1pP3P/7q/k7/4Pp2/P2pB1b1/3RR3');
+        initBoard(cells);
     });
 
     function numberToLetter(num){
@@ -88,12 +94,21 @@
         }
     }
 
-    function clearPossibleMoves(){
+    function clearPossibleMoves() {
         for(var cell of possibleMoveCells) {
-            cell.div.querySelector(`.move-location-${cell.piece ? 'piece-' : ''}${cell.color}`)?.remove();
+            cell.possibleMove = false;
+        }
+        for(var cell of promotingCells) {
+            cell.promote = null;
         }
         possibleMoveCells.length = 0;
-        clickedCell?.div.classList.remove('whitecell-clicked','blackcell-clicked');
+        if(clickedCell)
+            clickedCell.clicked = false;
+        if(pawnPromoting) {
+            getPieceCell(pawnPromoting).piece = pawnPromoting;
+            pawnPromoting = null;
+        }
+        promotingCells.length = 0;
     }
 
     function getPieceType(piece){
@@ -101,16 +116,18 @@
     }
 
     function onCellClick(cell){
-        if([...cell.div.childNodes].map(node => node.className)
-        .includes(`move-location-${cell.piece ? 'piece-' : ''}${cell.color}`)) {
+        if(cell.promote)
+            return;
+        if(cell.rank===1 && cell.file === 2)
+            console.log(whitePieces);
+        if(cell.possibleMove) {
             clearPossibleMoves();
-            movePieceTo(clickedCell,cell);
-            clearPossibleMoves();
+            movePieceTo(clickedCell.piece,cell);
+            //clearPossibleMoves();
         }
-        else if(cell.piece === null || cell.div.classList.contains(`${cell.color}cell-clicked`)) {
+        else if(cell.piece === null || cell.clicked ) {
             clearPossibleMoves();
-            cell.div.classList.remove(`${cell.color}cell-clicked`);
-            clickedCell?.div.classList.remove('whitecell-clicked','blackcell-clicked');
+            cell.clicked = false;
             clickedCell = null;
         }
         else {
@@ -121,8 +138,7 @@
             // if(cell.piece.color ==='w' && !whiteTurn)
             //     return;
             clearPossibleMoves();
-            clickedCell?.div.classList.remove('whitecell-clicked','blackcell-clicked');
-            cell.div.classList.add(`${cell.color}cell-clicked`);
+            cell.clicked = true;
             clickedCell = cell;
             showMoves(cell);
         }
@@ -131,9 +147,7 @@
 
     function showMoves(cell){
         for(var move of getLegalMoves(cell)){
-            var moveSpan = document.createElement('span');
-            moveSpan.classList.add(`move-location-${cells[move.i][move.j].piece ? 'piece-' : ''}${cells[move.i][move.j].color}`);
-            cells[move.i][move.j].div.appendChild(moveSpan);
+            cells[move.i][move.j].possibleMove = true;
             possibleMoveCells.push(cells[move.i][move.j]);
         }
     }
@@ -207,183 +221,307 @@
         return kingToCheck.isChecked(cells);
     }
 
-    function movePieceTo(pieceCell,moveToCell){
-        var pieceMoving = pieceCell.piece;
+    function movePieceTo(pieceMoving,moveToCell){
         var audio = null;
+        //Removing check class from checked king ,if king moved he cannot be in check ;-)
+        if(pieceMoving.color === 'w')
+            getPieceCell(whiteKing).checked = false;
+        else
+            getPieceCell(blackKing).checked = false;
+        //Handle Promotion
+        if(getPieceType(pieceMoving) === 'pawn' && 
+        ((pieceMoving.color === 'b' && moveToCell.rank === 1) || (pieceMoving.color === 'w' && moveToCell.rank === 8))) {
+            var movingDirection = pieceMoving.color === 'w' ? -1 : 1;
+            pawnPromoting = pieceMoving;
+            getPieceCell(pieceMoving).piece = null;
+            for(var i = 0; i < 4 ; i++) {
+                promotingCells.push(cells[moveToCell.rank-1+movingDirection * i][moveToCell.file - 1]);
+                cells[moveToCell.rank-1+movingDirection * i][moveToCell.file-1].promote = pieceMoving.color;
+            }
+            return;
+        }
         //Handling En Passant
-        if(getPieceType(pieceMoving) === 'pawn' && Math.abs(moveToCell.rank-pieceCell.rank) === 2) {
+        if(getPieceType(pieceMoving) === 'pawn' && Math.abs(moveToCell.rank-pieceMoving.rank) === 2) {
             if(enPassantPawn)
                 enPassantPawn.enPassant = false;
             enPassantPawn = pieceMoving;
         }
         if(getPieceType(pieceMoving) === 'pawn' && moveToCell.file != pieceMoving.file && !moveToCell.piece){
-            if(pieceMoving.color === 'b')
-                whitePieces = whitePieces.filter((piece) => {return cells[moveToCell.rank][moveToCell.file-1].piece !== piece});
-            else
-                blackPieces = blackPieces.filter((piece) => {return cells[moveToCell.rank-2][moveToCell.file-1].piece !== piece});
+            removePiece(moveToCell.piece);
             cells[moveToCell.rank-(pieceMoving.color === 'w' ? 2 : 0)][moveToCell.file-1].piece = null;
             audio = new Audio('sounds/public_sound_standard_Capture.ogg');
         }
         //End of handling En Passant
-        if(pieceMoving.color === 'w')
-            cells[whiteKing.rank-1][whiteKing.file-1].div.querySelector('.location-check')?.remove();
-        else
-            cells[blackKing.rank-1][blackKing.file-1].div.querySelector('.location-check')?.remove();
         if(!audio)
             audio = moveToCell.piece && pieceMoving.color != moveToCell.piece.color? 
             new Audio('sounds/public_sound_standard_Capture.ogg') : new Audio('sounds/public_sound_standard_Move.ogg');
-        if(moveToCell.piece && pieceMoving.color != moveToCell.piece.color) {
-            if(moveToCell.piece.color === 'w')
-                whitePieces = whitePieces.filter((piece) => {return moveToCell.piece !== piece});
-            else
-                blackPieces = blackPieces.filter((piece) => {return moveToCell.piece !== piece});
-        }
+        if(moveToCell.piece && pieceMoving.color != moveToCell.piece.color)
+            removePiece(moveToCell.piece);
         pieceMoving.moveToReal(cells,{
             i: moveToCell.rank-1,
             j: moveToCell.file-1,
             special: pieceMoving.color === moveToCell.piece?.color ? 'castling' : '',
         });
         whiteTurn = !whiteTurn;
-        if(enPassantPawn !== pieceMoving)
+        if(enPassantPawn && enPassantPawn !== pieceMoving)
             enPassantPawn.enPassant = false;
-        if(isKingChecked(pieceMoving.color === 'w' ? 'w' : 'b')){
-            var checkSpan = document.createElement('span');
-            checkSpan.classList.add('location-check');
-            var checkedKing = pieceMoving.color === 'w' ? whiteKing : blackKing;
-            cells[checkedKing.rank-1][checkedKing.file-1].div.appendChild(checkSpan);
+        if(isKingChecked(pieceMoving.color === 'w' ? 'b' : 'w')){
+            var checkedKing = pieceMoving.color === 'b' ? whiteKing : blackKing;
+            cells[checkedKing.rank-1][checkedKing.file-1].checked = true;
             if(isCheckMate(checkedKing.color)) {
                 audio = new Audio('sounds/public_sound_standard_Checkmate.ogg');
             }
         }
         audio.play();
+        cells = cells;
+        sendMoveToServer(clickedCell.rank,clickedCell.file,moveToCell.rank,moveToCell.file);
     }
 
+    function getPieceCell(piece) {
+        return cells[piece.rank-1][piece.file-1];
+    }
+
+    function removePiece(piece) {
+        if(piece.color === 'w')
+            whitePieces = whitePieces.filter(p => p != piece);
+        else
+            blackPieces = blackPieces.filter(p => p != piece);
+    }
     //Is the color checked, for example if isCheckMate('w') === True ==> Black won
     function isCheckMate(color) {
         var piecesToCheck = color === 'w' ? whitePieces : blackPieces;
         for(var piece of piecesToCheck) {
-            if(getLegalMoves(cells[piece.rank-1][piece.file-1]).length)
+            if(getLegalMoves(getPieceCell(piece)).length)
                 return false;
         }
         return true;
     }
 
+    function promotePiece(promoteTo,promoteFile) {
+        var pieceAfterPromote = null;
+        var promoteRank = pawnPromoting.color === 'w' ? 8 : 1;
+        switch(promoteTo) {
+            case 'q':
+                pieceAfterPromote = new Queen(pawnPromoting.color,promoteRank,promoteFile);
+                break;
+            case 'n':
+                pieceAfterPromote = new Knight(pawnPromoting.color,promoteRank,promoteFile);
+                break;
+            case 'r':
+                pieceAfterPromote = new Rook(pawnPromoting.color,promoteRank,promoteFile);
+                break;
+            case 'b':
+                pieceAfterPromote = new Bishop(pawnPromoting.color,promoteRank,promoteFile);
+                break;
+        }
+        cells[pawnPromoting.rank-1][pawnPromoting.file-1].piece = null;
+        removePiece(pawnPromoting);
+        console.log(whitePieces);
+        if(pawnPromoting.color === 'w')
+            whitePieces.push(pieceAfterPromote);
+        else
+            blackPieces.push(pieceAfterPromote);
+        pawnPromoting = null;
+        var audio = null;
+        if(cells[promoteRank-1][promoteFile-1].piece) {
+            removePiece(cells[promoteRank-1][promoteFile-1]);
+            audio = new Audio('sounds/public_sound_standard_Capture.ogg');
+        }
+        cells[promoteRank-1][promoteFile-1].piece = pieceAfterPromote;
+        if(!audio)
+            audio = new Audio('sounds/public_sound_standard_Move.ogg');
+        audio.play();
+        clearPossibleMoves();
+    }
+
     function playMovePGN(move){
         var pieces = whiteTurn ? whitePieces : blackPieces;
         var king = whiteTurn ? whiteKing : blackKing;
-        if(move.contains('.'))
+        if(move.includes('.'))
             move = move.split('.')[1].trim();
         if(move[0] === 'O'){
             if(move === 'O-O-O'){
-
+                movePieceTo(king,cells[7-(whiteTurn)*7][0])
+            }
+            else if(move === 'O-O'){
+                movePieceTo(king,cells[7-(whiteTurn)*7][7]);
             }
             else {
-
+                // Error
             }
             return;
         }
-        
-
     }
 
+
     function initBoardFromFEN(cells,FENString){
+        var segements = FENString.split(' ');
         var rank = 7;
         var file = 0;
-        for(var i = 0 ; i < FENString.length && FENString[i] != ' ' ; i++){
-            switch(FENString[i]){
-                case 'P':
-                    cells[rank][file].piece = new Pawn('w',rank+1,file+1);
-                    whitePieces.push(cells[rank][file].piece);
-                    file++;
-                    break;
-                case 'N':
-                    cells[rank][file].piece = new Knight('w',rank+1,file+1);
-                    whitePieces.push(cells[rank][file].piece);
-                    file++;
-                    break;
-                case 'B':
-                    cells[rank][file].piece = new Bishop('w',rank+1,file+1);
-                    whitePieces.push(cells[rank][file].piece);
-                    file++;
-                    break;
-                case 'R':
-                    cells[rank][file].piece = new Rook('w',rank+1,file+1);
-                    whitePieces.push(cells[rank][file].piece);
-                    file++;
-                    break;
-                case 'Q':
-                    cells[rank][file].piece = new Queen('w',rank+1,file+1);
-                    whitePieces.push(cells[rank][file].piece);
-                    file++;
-                    break;
-                case 'K':
-                    cells[rank][file].piece = new King('w',rank+1,file+1);
-                    whitePieces.push(cells[rank][file].piece);
-                    whiteKing = cells[rank][file].piece;
-                    file++;
-                    break;
-                case 'p':
-                    cells[rank][file].piece = new Pawn('b',rank+1,file+1);
-                    blackPieces.push(cells[rank][file].piece);
-                    file++;
-                    break;
-                case 'n':
-                    cells[rank][file].piece = new Knight('b',rank+1,file+1);
-                    blackPieces.push(cells[rank][file].piece);
-                    file++;
-                    break;
-                case 'b':
-                    cells[rank][file].piece = new Bishop('b',rank+1,file+1);
-                    blackPieces.push(cells[rank][file].piece);
-                    file++;
-                    break;
-                case 'r':
-                    cells[rank][file].piece = new Rook('b',rank+1,file+1);
-                    blackPieces.push(cells[rank][file].piece);
-                    file++;
-                    break;
-                case 'q':
-                    cells[rank][file].piece = new Queen('b',rank+1,file+1);
-                    blackPieces.push(cells[rank][file].piece);
-                    file++;
-                    break;
-                case 'k':
-                    cells[rank][file].piece = new King('b',rank+1,file+1);
-                    blackPieces.push(cells[rank][file].piece);
-                    blackKing = cells[rank][file].piece;
-                    file++;
-                    break;
-                case '/':
-                    file=0;
-                    rank--;
-                    break;
-                default:
-                    if(!isNaN(parseInt(FENString[i])))
-                        file+=parseInt(FENString[i]);
+        try {
+            for(var i = 0 ; i < segements[0].length && segements[0][i] != ' ' ; i++){
+                switch(segements[0][i]){
+                    case 'P':
+                        cells[rank][file].piece = new Pawn('w',rank+1,file+1);
+                        whitePieces.push(cells[rank][file].piece);
+                        file++;
+                        break;
+                    case 'N':
+                        cells[rank][file].piece = new Knight('w',rank+1,file+1);
+                        whitePieces.push(cells[rank][file].piece);
+                        file++;
+                        break;
+                    case 'B':
+                        cells[rank][file].piece = new Bishop('w',rank+1,file+1);
+                        whitePieces.push(cells[rank][file].piece);
+                        file++;
+                        break;
+                    case 'R':
+                        cells[rank][file].piece = new Rook('w',rank+1,file+1);
+                        whitePieces.push(cells[rank][file].piece);
+                        file++;
+                        break;
+                    case 'Q':
+                        cells[rank][file].piece = new Queen('w',rank+1,file+1);
+                        whitePieces.push(cells[rank][file].piece);
+                        file++;
+                        break;
+                    case 'K':
+                        cells[rank][file].piece = new King('w',rank+1,file+1);
+                        whitePieces.push(cells[rank][file].piece);
+                        whiteKing = cells[rank][file].piece;
+                        file++;
+                        break;
+                    case 'p':
+                        cells[rank][file].piece = new Pawn('b',rank+1,file+1);
+                        blackPieces.push(cells[rank][file].piece);
+                        file++;
+                        break;
+                    case 'n':
+                        cells[rank][file].piece = new Knight('b',rank+1,file+1);
+                        blackPieces.push(cells[rank][file].piece);
+                        file++;
+                        break;
+                    case 'b':
+                        cells[rank][file].piece = new Bishop('b',rank+1,file+1);
+                        blackPieces.push(cells[rank][file].piece);
+                        file++;
+                        break;
+                    case 'r':
+                        cells[rank][file].piece = new Rook('b',rank+1,file+1);
+                        blackPieces.push(cells[rank][file].piece);
+                        file++;
+                        break;
+                    case 'q':
+                        cells[rank][file].piece = new Queen('b',rank+1,file+1);
+                        blackPieces.push(cells[rank][file].piece);
+                        file++;
+                        break;
+                    case 'k':
+                        cells[rank][file].piece = new King('b',rank+1,file+1);
+                        blackPieces.push(cells[rank][file].piece);
+                        blackKing = cells[rank][file].piece;
+                        file++;
+                        break;
+                    case '/':
+                        file=0;
+                        rank--;
+                        break;
+                    default:
+                        if(!isNaN(parseInt(segements[0][i])))
+                            file+=parseInt(segements[0][i]);
+                }
             }
+        }catch(err){
+            console.log('FEN string bad');
         }
+        //Handling  turn.
+        whiteTurn = segements[1] === 'w';
+        //Handling what rooks can be castled
+        if(segements[2] !== '-'){
+            if(segements[2].contains('K'))
+                cells[0][7].piece.hasMoved = false;
+            else
+                cells[0][7].piece.hasMoved = true;
+            if(segements[2].contains('Q'))
+                cells[0][0].piece.hasMoved = false;
+            else
+                cells[0][0].piece.hasMoved = true;
+            if(segements[2].contains('k'))
+                cells[7][7].piece.hasMoved = false;
+            else
+                cells[7][7].piece.hasMoved = true;
+            if(segements[2].contains('q'))
+                cells[7][0].piece.hasMoved = false;
+            else
+                cells[7][0].piece.hasMoved = true;
+        }
+        //Handling what pawn can be En passant
+        if(segements[3] !== '-')
+            enPassantPawn = cells[letterToNumber(segements[3][0])-1][segements[3][0]-1].piece.enPassant = true;
+        //Handle Turns ...
+    }
 
+    function cleanBoard(cells){
+        whitePieces.length = 0;
+        blackPieces.length = 0;
+        for(var i = 0 ; i < 8 ; i++)
+            for(var j = 0 ; j < 8 ; j++)
+                cells[i][j].piece = null;
+        blackKing = null;
+        whiteKing = null;
+    }
+
+    export function rotateBoard(){
+        boardSide = boardSide === 'w' ? 'b' : 'w';
+    }
+
+    export function setColor(c){
+        color = c;
+    }
+
+    export function movePieceByServer(res){
+        movePieceTo(cells[res.originRank-1][res.originFile-1].piece,cells[res.destRank-1][res.destFile-1]);
     }
 
 </script>
 
 
 <div class='board' bind:this={board}>
-    {#each boardSide === 'w' ? [...cells].reverse() : [...cells] as row}
-        {#each row as cell}
-        <div bind:this={cell.div} class={`${cell.color}cell`} on:click={() => {onCellClick(cell)}}>
-            {#if cell.piece !== null}
-                <img class='piecesvg' src='images/{cell.piece.color}_{getPieceType(cell.piece)}.svg' alt=''>
+    {#each boardSide === 'w' ? [...cells].reverse() : cells as row}
+        {#each boardSide === 'w' ? row : [...row].reverse() as cell}
+        <div
+            class={`${cell.color}cell`} on:click={() => {onCellClick(cell)}}
+            class:clicked='{cell.clicked}'>
+            {#if cell.promote}
+                <span class='promote-cell'>
+                </span>
+                {#if cell.rank === 1 || cell.rank === 8}
+                    <img class='piecesvg' src='images/{cell.promote}_queen.svg' alt='' on:click={promotePiece('q',cell.file)}/>
+                {:else if cell.rank === 2 || cell.rank === 7}
+                    <img class='piecesvg' src='images/{cell.promote}_knight.svg' alt=''/>
+                {:else if cell.rank === 3 || cell.rank === 6}
+                    <img class='piecesvg' src='images/{cell.promote}_rook.svg' alt=''/>
+                {:else if cell.rank === 4 || cell.rank === 5}
+                    <img class='piecesvg' src='images/{cell.promote}_bishop.svg' alt=''/>
+                {/if}
+            {:else if cell.piece}
+                    <img class='piecesvg' src='images/{cell.piece.color}_{getPieceType(cell.piece)}.svg' alt=''>
             {/if}
             {#if (cell.rank === 1 && boardSide === 'w') || (cell.rank === 8 && boardSide === 'b')}
                 <span class='filenumber'>
                     {numberToLetter(cell.file)}        
                 </span>
             {/if}
-            {#if cell.file === 8}
+            {#if (cell.file === 8 && boardSide === 'w') || (cell.file === 1 && boardSide === 'b')}
                 <span class='ranknumber'>
                     {cell.rank}
                 </span>
+            {/if}
+            {#if cell.possibleMove}
+                <span class={cell.piece ? 'piece-possible-move' : 'move-location'}></span>
+            {:else if cell.checked}
+                <span class={'location-check'}></span>
             {/if}
         </div>
         {/each}
@@ -398,6 +536,7 @@
     $whiteColorClicked: #B5FD90;
     $blackColorClicked: #D3AAEF;
     $moveLocation: black;
+    $promoteBackgroundColor: #AAAAAA;
     
     .board {
         border: 2px solid #B58863;
@@ -416,8 +555,26 @@
         span {
             color: $blackColor;
         }
+
+        .move-location {
+            height: 35%;
+            width: 35%;
+            border-radius: 50%;
+            background: $whiteColorClicked;
+
+            
+        }
+
+        .piece-possible-move {
+            height:100%;
+            width:100%;
+            position:absolute;
+            background: radial-gradient(transparent 0%, transparent 79%, $whiteColorClicked);
+        }
+    
     }
-    .blackcell{
+
+    .blackcell {
         display:flex;
         justify-content: center;
         align-items: center;
@@ -427,6 +584,29 @@
         span {
             color: $whiteColor;
         }
+
+        .move-location {
+            height: 35%;
+            width: 35%;
+            border-radius: 50%;
+            background: $blackColorClicked;
+        }
+
+        .piece-possible-move {
+            height:100%;
+            width:100%;
+            position:absolute;
+            background: radial-gradient(transparent 0%, transparent 79%, $blackColorClicked);
+        }
+
+    }
+
+    .whitecell.clicked {
+            background-color: $whiteColorClicked;
+    }
+
+    .blackcell.clicked {
+        background-color: $blackColorClicked;
     }
 
     .filenumber {
@@ -449,48 +629,28 @@
         z-index: 1;
     }
 
-    .whitecell-clicked {
-        background-color: $whiteColorClicked;
-    }
-
-    .blackcell-clicked {
-        background-color: $blackColorClicked;
-    }
-
-    :global(.move-location-white) {
-        height: 35%;
-        width: 35%;
-        border-radius: 50%;
-        background: $whiteColorClicked;
-    }
-
-    :global(.move-location-black){
-        height: 35%;
-        width: 35%;
-        border-radius: 50%;
-        background: $blackColorClicked;
-    }
-
-    :global(.move-location-piece-black){
-        height:100%;
-        width:100%;
-        position:absolute;
-        background: radial-gradient(transparent 0%, transparent 79%, $blackColorClicked);
-    }
-
-    :global(.move-location-piece-white){
-        height:100%;
-        width:100%;
-        position:absolute;
-        background: radial-gradient(transparent 0%, transparent 79%, $whiteColorClicked);
-    }
-
-    :global(.location-check){
+    .location-check {
         height: 100%;
         width: 100%;
         position: absolute;
         z-index: 0;
         background: radial-gradient(ellipse at center, rgb(250, 75, 75) 0%, #e70000 25%, rgba(169,0,0,0) 89%, rgba(158,0,0,0) 100%);
+    }
+
+    .promote-cell {
+        position: absolute;
+        min-width: 100%;
+        min-height: 100%;
+        background-color: $promoteBackgroundColor;
+    }
+
+    .piecesvg.promote-cell {
+        min-height: 80%;
+        min-width: 80%;
+    }
+
+    :global(.promotion-cell) {
+        background-color: black;
     }
 
 </style>
