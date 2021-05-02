@@ -119,7 +119,7 @@
         if(cell.promote)
             return;
         if(cell.rank===1 && cell.file === 2)
-            console.log(whitePieces);
+            console.log(blackPieces);
         if(cell.possibleMove) {
             clearPossibleMoves();
             movePieceTo(clickedCell.piece,cell);
@@ -140,6 +140,7 @@
             clearPossibleMoves();
             cell.clicked = true;
             clickedCell = cell;
+            console.log(cell);
             showMoves(cell);
         }
         cells = cells;
@@ -150,14 +151,17 @@
             cells[move.i][move.j].possibleMove = true;
             possibleMoveCells.push(cells[move.i][move.j]);
         }
+        console.log('endShowMoves');
     }
 
     function getLegalMoves(cell){
         var legalMoves = [];
+        try {
         for(var move of cell.piece.getMoves(cells)){
             if(isMoveLegal(cell,move))
                 legalMoves.push(move);
         }
+        }catch(err) {console.log(err);console.log(cell);}
         return legalMoves;
     }
 
@@ -316,7 +320,6 @@
         }
         cells[pawnPromoting.rank-1][pawnPromoting.file-1].piece = null;
         removePiece(pawnPromoting);
-        console.log(whitePieces);
         if(pawnPromoting.color === 'w')
             whitePieces.push(pieceAfterPromote);
         else
@@ -324,7 +327,7 @@
         pawnPromoting = null;
         var audio = null;
         if(cells[promoteRank-1][promoteFile-1].piece) {
-            removePiece(cells[promoteRank-1][promoteFile-1]);
+            removePiece(cells[promoteRank-1][promoteFile-1].piece);
             audio = new Audio('sounds/public_sound_standard_Capture.ogg');
         }
         cells[promoteRank-1][promoteFile-1].piece = pieceAfterPromote;
@@ -497,13 +500,13 @@
                 <span class='promote-cell'>
                 </span>
                 {#if cell.rank === 1 || cell.rank === 8}
-                    <img class='piecesvg' src='images/{cell.promote}_queen.svg' alt='' on:click={promotePiece('q',cell.file)}/>
+                    <img class='piecesvg-promote' src='images/{cell.promote}_queen.svg' alt='' on:click={promotePiece('q',cell.file)}/>
                 {:else if cell.rank === 2 || cell.rank === 7}
-                    <img class='piecesvg' src='images/{cell.promote}_knight.svg' alt=''/>
+                    <img class='piecesvg-promote' src='images/{cell.promote}_knight.svg' alt='' on:click={promotePiece('n',cell.file)}/>
                 {:else if cell.rank === 3 || cell.rank === 6}
-                    <img class='piecesvg' src='images/{cell.promote}_rook.svg' alt=''/>
+                    <img class='piecesvg-promote' src='images/{cell.promote}_rook.svg' alt='' on:click={promotePiece('r',cell.file)}/>
                 {:else if cell.rank === 4 || cell.rank === 5}
-                    <img class='piecesvg' src='images/{cell.promote}_bishop.svg' alt=''/>
+                    <img class='piecesvg-promote' src='images/{cell.promote}_bishop.svg' alt='' on:click={promotePiece('b',cell.file)}/>
                 {/if}
             {:else if cell.piece}
                     <img class='piecesvg' src='images/{cell.piece.color}_{getPieceType(cell.piece)}.svg' alt=''>
@@ -642,11 +645,15 @@
         min-width: 100%;
         min-height: 100%;
         background-color: $promoteBackgroundColor;
+        border-radius: 50%;
+        box-shadow: inset 10px 10px 25px 3px #808080;
+
     }
 
-    .piecesvg.promote-cell {
-        min-height: 80%;
-        min-width: 80%;
+    .piecesvg-promote {
+        min-height: 100%;
+        min-width: 100%;
+        transform: scale(0.75);
     }
 
     :global(.promotion-cell) {

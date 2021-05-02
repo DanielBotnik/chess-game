@@ -20,7 +20,7 @@ export class Pawn extends Piece {
                 j: file,
             });
         }
-        if(!this.hasMoved && !board[rank+moveDirection*2][file].piece){
+        if(!this.hasMoved && !board[rank+moveDirection*2][file].piece && !board[rank+moveDirection][file].piece){
             moves.push({
                 i: rank+moveDirection*2,
                 j: file,
