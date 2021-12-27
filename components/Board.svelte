@@ -167,7 +167,7 @@
 
     function makeAMove(pieceCell, dest) {
         var type = ""
-        var file
+        var file = String.fromCharCode(dest.file+96)
         var rank = dest.rank
         switch(getPieceType(pieceCell.piece)) {
             case "rook":
@@ -184,32 +184,6 @@
             break;
             case "king":
                 type="♔"
-            break;
-        }
-        switch(dest.file) {
-            case 1:
-                file="a"
-            break;
-            case 2:
-                file="b"
-            break;
-            case 3:
-                file="c"
-            break;
-            case 4:
-                file="d"
-            break;
-            case 5:
-                file="e"
-            break;
-            case 6:
-                file="f"
-            break;
-            case 7:
-                file="g"
-            break;
-            case 8:
-                file="h"
             break;
         }
         return(type+file+rank)
