@@ -7,6 +7,7 @@
     import { Queen } from "../pieces/queen.js";
     import { Rook } from "../pieces/rook.js";
     import { King } from "../pieces/king.js";
+
     
     export let size;
     let board = null;
@@ -17,6 +18,8 @@
     let blackKing = null;
     let whiteKing = null;
     var cells = [];
+
+    export var addClockMove;
 
     onMount(() => {
         board.style.width = `calc(${size}vmin + 2px)`;
@@ -162,20 +165,129 @@
         return false;
     }
 
+    function makeAMove(pieceCell, dest) {
+        var type = ""
+        var file = String.fromCharCode(dest.file+96)
+        var rank = dest.rank
+        switch(getPieceType(pieceCell.piece)) {
+            case "rook":
+                type="♖"
+            break;
+            case "bishop":
+                type="♗"
+            break;
+            case "knight":
+                type="♘"
+            break;
+            case "queen":
+                type="♕"
+            break;
+            case "king":
+                type="♔"
+            break;
+        }
+        return(type+file+rank)
+    }
+
+    function createFEN() {
+        var empty = 0
+        var fen = ''
+        for(var i = 7 ; i >= 0 ; i--){
+            for(var j = 0 ; j < 8 ; j++){
+                if (!cells[i][j].piece) {
+                    empty++
+                } else {
+                    if (empty > 0) {
+                        fen += empty
+                        empty = 0
+                    }
+                    var color = cells[i][j].piece.color
+                    var piece = getPieceType(cells[i][j].piece).charAt(0);
+
+                    fen += color === 'w' ? piece.toUpperCase() : piece.toLowerCase()
+                }
+            }
+
+            if (empty > 0) 
+                fen += empty
+            fen += '/'
+            empty = 0
+        }
+        return(fen.slice(0, -1))
+    }
+
+    function changeBoardByFEN(fen) {
+        let increase = 0
+        for(var i = 7 ; i >= 0 ; i--){
+            for(var j = 0 ; j < 8 ; j++){
+                switch (fen.charAt(0)) {
+                    case 'p':
+                       cells[i][j].piece = new Pawn('b',i+1,j+1);
+                    break;
+                    case 'P':
+                       cells[i][j].piece = new Pawn('w',i+1,j+1);
+                    break;
+                    case 'r':
+                       cells[i][j].piece = new Rook('b',i+1,j+1);
+                    break;
+                    case 'R':
+                       cells[i][j].piece = new Rook('w',i+1,j+1);
+                    break;
+                    case 'n':
+                       cells[i][j].piece = new Knight('b',i+1,j+1);
+                    break;
+                    case 'N':
+                       cells[i][j].piece = new Knight('w',i+1,j+1);
+                    break;
+                    case 'b':
+                       cells[i][j].piece = new Bishop('b',i+1,j+1);
+                    break;
+                    case 'B':
+                       cells[i][j].piece = new Bishop('w',i+1,j+1);
+                    break;
+                    case 'q':
+                       cells[i][j].piece = new Queen('b',i+1,j+1);
+                    break;
+                    case 'Q':
+                       cells[i][j].piece = new Queen('w',i+1,j+1);
+                    break;
+                    case 'k':
+                       cells[i][j].piece = new King('b',i+1,j+1);
+                    break;
+                    case 'K':
+                       cells[i][j].piece = new King('w',i+1,j+1);
+                    break;
+                    default:
+                        cells[i][j].piece = null;
+                        increase = Number(fen.charAt(0))
+                        increase--
+                        fen = increase + fen.substring(1);
+                    break;
+                }
+                if (increase == 0)
+                    fen = fen.substring(1)
+            }
+            fen = fen.substring(1)
+        }
+    }
+
     function movePieceTo(pieceCell,moveToCell){
+        var moveValue = makeAMove(pieceCell,moveToCell)
         var audio = moveToCell.piece ? 
         new Audio('sounds/public_sound_standard_Capture.ogg') : new Audio('sounds/public_sound_standard_Move.ogg');
         if(moveToCell.piece) {
             if(moveToCell.piece.color === 'w')
                 whitePieces = whitePieces.filter((piece) => {return moveToCell.piece !== piece});
-            else
+            else 
                 blackPieces = blackPieces.filter((piece) => {return moveToCell.piece !== piece});
         }
+        addClockMove(pieceCell.piece.color, moveValue)
         pieceCell.piece.moveToReal(cells,{
             i: moveToCell.rank-1,
             j: moveToCell.file-1,
         });
         audio.play();
+        createFEN();
     }
 
 </script>
