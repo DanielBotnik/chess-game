@@ -273,6 +273,7 @@
 
     function movePieceTo(pieceCell,moveToCell){
         var moveValue = makeAMove(pieceCell,moveToCell)
+        var color = pieceCell.piece.color
         var audio = moveToCell.piece ? 
         new Audio('sounds/public_sound_standard_Capture.ogg') : new Audio('sounds/public_sound_standard_Move.ogg');
         if(moveToCell.piece) {
@@ -281,13 +282,13 @@
             else 
                 blackPieces = blackPieces.filter((piece) => {return moveToCell.piece !== piece});
         }
-        addClockMove(pieceCell.piece.color, moveValue)
         pieceCell.piece.moveToReal(cells,{
             i: moveToCell.rank-1,
             j: moveToCell.file-1,
         });
+        var fen = createFEN();
+        addClockMove(color, moveValue, fen)
         audio.play();
-        createFEN();
     }
 
 </script>

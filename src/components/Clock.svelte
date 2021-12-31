@@ -13,28 +13,36 @@ let turn = 0;
 let data = [ ["1"] ]
 let dataPointer = [1 , 1] //turn , white = 1 | black = 2
 let dataCounter;
-let dataFEN
+let dataFEN = [ ["1"] ] 
 let newRow
+let newFen
 let lastTurn
+let lastFen
 	
 
-    export function addMove(color, value) {
+    export function addMove(color, value, fen) {
         if(color === 'w'){
             turn++
             dataPointer = [turn , 1]
             if(turn==1){
                 data = [["1", value]]
+                dataFEN = [["1", fen]]
             }
             else {
                 newRow = [turn, value]
                 data = [...data, [...newRow]] 
+                newFen = [turn, fen]
+                dataFEN = [...data, [...newFen]] 
             }
         }
         else{
             dataPointer[1] = 2
-            lastTurn = data.pop() //shuft
+            lastTurn = data.pop() //shift
             lastTurn = [...lastTurn, value]
             data = [...data, [...lastTurn]] 
+            lastFen = dataFEN.pop() //shift
+            lastFen = [...lastFen, fen]
+            dataFEN = [...dataFEN, [...lastFen]] 
         }
         // markThePointer()
         // unmarkThePointer()
@@ -69,9 +77,9 @@ let lastTurn
 
 
     function scrollToBottom(id) {
+        //notWorking
         let table = document.getElementById(id)
-        // alert(table.offsetHeight.valueOf())
-
+        // alert(table.offsetHeight.valueOf()) - Thats the reason
         window.scrollBy({ 
             top: table.offsetHeight,
             behavior: 'smooth' 

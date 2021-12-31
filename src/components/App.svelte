@@ -4,10 +4,10 @@
 	
 	let clock;
 
-	function callClock(color, value) {
-		clock.addMove(color, value)
-		clock.markThePointer()
-        clock.unmarkThePointer()
+	function callClock(color, value, fen) {
+		clock.addMove(color, value, fen)
+		//clock.markThePointer() - if you play these function, the game stop work in second turn
+        //clock.unmarkThePointer()
 	}
 
 </script>
