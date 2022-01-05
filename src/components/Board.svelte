@@ -325,6 +325,11 @@
     $blackColorClicked: #D3AAEF; 
     
     .board {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        margin-right: -50%;
+        transform: translate(-50%, -50%);
         border: 2px solid #B58863;
         display:grid;
         grid-template-columns: repeat(8,1fr);
