@@ -29,6 +29,19 @@
 
     export var addClockMove;
 
+
+    //returns if there was a capture between the fens
+    export function changeBoard(fen){
+        let oldNumOfPieces = blackPieces.length + whitePieces.length;
+        changeBoardByFEN(fen);
+        clearPossibleMoves();
+        if(clickedCell)
+            clickedCell.clicked = false;
+        clickedCell = null;
+        console.log(blackPieces.length + whitePieces.length);
+        return blackPieces.length + whitePieces.length !== oldNumOfPieces;
+    }
+
     onMount(() => {
         board.style.width = `calc(${size}vmin + 2px)`;
         board.style.height = `calc(${size}vmin + 2px)`;
@@ -44,9 +57,12 @@
                     piece: null,
                     div: null,
                     clicked: false,
-                    checked: false,
                     possibleMove: false,
-                    promote: null,
+// ===
+//                     checked: false,
+//                     possibleMove: false,
+//                     promote: null,
+// main
                 });
             });
         });
@@ -97,13 +113,13 @@
         }
     }
 
-    function clearPossibleMoves() {
-        for(var cell of possibleMoveCells) {
-            cell.possibleMove = false;
-        }
-        for(var cell of promotingCells) {
-            cell.promote = null;
-        }
+//     function clearPossibleMoves() {
+//         for(var cell of possibleMoveCells) {
+//             cell.possibleMove = false;
+//         }
+//         for(var cell of promotingCells) {
+//             cell.promote = null;
+//         }
         possibleMoveCells.length = 0;
         if(clickedCell)
             clickedCell.clicked = false;
@@ -119,19 +135,26 @@
     }
 
     function onCellClick(cell){
-        if(cell.promote)
-            return;
-        if(cell.rank===1 && cell.file === 2)
-            console.log(blackPieces);
-        if(cell.possibleMove) {
+        if(cell.possibleMove){
+            movePieceTo(clickedCell,cell);
             clearPossibleMoves();
-            movePieceTo(clickedCell.piece,cell);
-            //clearPossibleMoves();
-        }
-        else if(cell.piece === null || cell.clicked ) {
-            clearPossibleMoves();
-            cell.clicked = false;
-            clickedCell = null;
+            if(clickedCell) {
+                clickedCell.clicked = false;
+            }
+                
+//         if(cell.promote)
+//             return;
+//         if(cell.rank===1 && cell.file === 2)
+//             console.log(blackPieces);
+//         if(cell.possibleMove) {
+//             clearPossibleMoves();
+//             movePieceTo(clickedCell.piece,cell);
+//             //clearPossibleMoves();
+//         }
+//         else if(cell.piece === null || cell.clicked ) {
+//             clearPossibleMoves();
+//             cell.clicked = false;
+//             clickedCell = null;
         }
         else {
             // if(cell.piece.color !== color)
@@ -141,31 +164,50 @@
             // if(cell.piece.color ==='w' && !whiteTurn)
             //     return;
             clearPossibleMoves();
-            cell.clicked = true;
-            clickedCell = cell;
-            console.log(cell);
-            showMoves(cell);
+            if(clickedCell) {
+                clickedCell.clicked = false; 
+            }
+            if(!cell.piece || cell.clicked)
+                clickedCell = null;
+            else {
+                cell.clicked = !cell.clicked;
+                clickedCell = cell;
+                showMoves(cell);
+            }
+//             cell.clicked = true;
+//             clickedCell = cell;
+//             console.log(cell);
+//             showMoves(cell);
         }
         cells = cells;
     }
 
     function showMoves(cell){
-        for(var move of getLegalMoves(cell)){
-            cells[move.i][move.j].possibleMove = true;
-            possibleMoveCells.push(cells[move.i][move.j]);
-        }
-        console.log('endShowMoves');
-    }
 
-    function getLegalMoves(cell){
-        var legalMoves = [];
-        try {
-        for(var move of cell.piece.getMoves(cells)){
-            if(isMoveLegal(cell,move))
-                legalMoves.push(move);
-        }
-        }catch(err) {console.log(err);console.log(cell);}
-        return legalMoves;
+        for(var move of cell.piece.getMoves(cells)) {
+            if(isMoveLegal(cell,move)) {
+                cells[move.i][move.j].possibleMove = true;
+                possibleMoveCells.push(cells[move.i][move.j]);
+            }
+                
+         }
+
+//         for(var move of getLegalMoves(cell)){
+//             cells[move.i][move.j].possibleMove = true;
+//             possibleMoveCells.push(cells[move.i][move.j]);
+//         }
+//         console.log('endShowMoves');
+//     }
+
+//     function getLegalMoves(cell){
+//         var legalMoves = [];
+//         try {
+//         for(var move of cell.piece.getMoves(cells)){
+//             if(isMoveLegal(cell,move))
+//                 legalMoves.push(move);
+//         }
+//         }catch(err) {console.log(err);console.log(cell);}
+//         return legalMoves;
     }
 
     function isMoveLegal(cell,move){
@@ -266,7 +308,8 @@
                         empty = 0
                     }
                     var color = cells[i][j].piece.color
-                    var piece = getPieceType(cells[i][j].piece).charAt(0);
+                    var pieceType = getPieceType(cells[i][j].piece);
+                    var piece = pieceType === 'knight' ? 'n' : pieceType.charAt(0);
 
                     fen += color === 'w' ? piece.toUpperCase() : piece.toLowerCase()
                 }
@@ -623,6 +666,14 @@
 
 
 <div class='board' bind:this={board}>
+    {#each [...cells].reverse() as row}
+        {#each row as cell}
+        <div bind:this={cell.div} class={`${cell.color}cell`} 
+            class:whitecellclicked={cell.clicked && cell.color === 'white'}
+            class:blackcellclicked={cell.clicked && cell.color === 'black'} on:click={() => {onCellClick(cell)}}>
+            {#if cell.piece !== null}
+                <img class='piecesvg' src='images/{cell.piece.color}_{getPieceType(cell.piece)}.svg' alt=''> 
+<!-- ===
     {#each boardSide === 'w' ? [...cells].reverse() : cells as row}
         {#each boardSide === 'w' ? row : [...row].reverse() as cell}
         <div
@@ -642,6 +693,7 @@
                 {/if}
             {:else if cell.piece}
                     <img class='piecesvg' src='images/{cell.piece.color}_{getPieceType(cell.piece)}.svg' alt=''>
+main -->
             {/if}
             {#if (cell.rank === 1 && boardSide === 'w') || (cell.rank === 8 && boardSide === 'b')}
                 <span class='filenumber'>
@@ -654,9 +706,12 @@
                 </span>
             {/if}
             {#if cell.possibleMove}
+                <span class='move-location'></span>
+<!-- ===
                 <span class={cell.piece ? 'piece-possible-move' : 'move-location'}></span>
             {:else if cell.checked}
                 <span class={'location-check'}></span>
+main -->
             {/if}
         </div>
         {/each}
@@ -787,6 +842,12 @@
 
     }
 
+    .move-location {
+        height: 35%;
+        width: 35%;
+        border-radius: 50%;
+        background:black;
+        
     .piecesvg-promote {
         min-height: 100%;
         min-width: 100%;

@@ -1,6 +1,6 @@
 import { Piece } from './piece'
 
-export class Knight extends Piece{
+export class Knight extends Piece {
     
     constructor(color,rank,file){
         super(color,rank,file);

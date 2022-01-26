@@ -39,6 +39,7 @@
 
 	
 	let clock;
+	let board;
 	// const socket = io('ws://localhost:8080');
 
 	// socket.on('message', text => {
@@ -55,12 +56,18 @@
 
 	function callClock(color, value, fen) {
 		clock.addMove(color, value, fen)
-		//clock.markThePointer() - if you play these function, the game stop work in second turn
-        //clock.unmarkThePointer()
+	}
+
+	function changeBoardFromClock(fen) {
+		return board.changeBoard(fen);
 	}
 
 </script>
 <div>
+<!-- 	<Clock bind:this={clock} changeBoard={changeBoardFromClock} />
+	<Board bind:this={board} size={70} addClockMove={callClock} changeBoard={changeBoardFromClock}/>
+	<!-- <Board size={70}/> -->
+ -->
 	<!-- <Clock bind:this={clock}/>
 	<Board size={70} addClockMove={callClock}/>
 	<Chat/> -->
