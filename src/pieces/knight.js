@@ -1,6 +1,6 @@
 import { Piece } from './piece'
 
-export class Knight extends Piece{
+export class Knight extends Piece {
     
     constructor(color,rank,file){
         super(color,rank,file);
@@ -10,65 +10,46 @@ export class Knight extends Piece{
         var rank = this.rank - 1;
         var file = this.file - 1;
         var moves = [];
-        var leftUp,rightUp,leftDown,rightDown;
-        leftUp = rightUp = leftDown = rightDown = 1;
-        while(board[rank+rightUp] && board[rank+rightUp][file+rightUp]?.piece === null){
+        if(board[rank+2] && board[rank+2][file+1] && board[rank+2][file+1].piece?.color != this.color)
             moves.push({
-                i: rank+rightUp,
-                j: file+rightUp,
+                i: rank+2,
+                j: file+1,
             });
-            rightUp++;
-        }
-        if(board[rank+rightUp] && board[rank+rightUp][file+rightUp]?.piece
-            && board[rank+rightUp][file+rightUp].piece.color != this.color){
-                moves.push({
-                    i: rank+rightUp,
-                    j: file+rightUp,
-                });
-        }
-        while(board[rank+leftUp] && board[rank+leftUp][file-leftUp]?.piece === null){
+        if(board[rank+2] && board[rank+2][file-1] && board[rank+2][file-1].piece?.color != this.color)
             moves.push({
-                i: rank+leftUp,
-                j: file-leftUp,
+                i: rank+2,
+                j: file-1,
             });
-            leftUp++;
-        }
-        if(board[rank+leftUp] && board[rank+leftUp][file-leftUp]?.piece
-            && board[rank+leftUp][file-leftUp].piece.color != this.color){
-                moves.push({
-                    i: rank+leftUp,
-                    j: file-leftUp,
-                });
-        }
-        while(board[rank-rightDown] && board[rank-rightDown][file+rightDown]?.piece === null){
+        if(board[rank-2] && board[rank-2][file+1] && board[rank-2][file+1].piece?.color != this.color)
             moves.push({
-                i: rank-rightDown,
-                j: file+rightDown,
+                i: rank-2,
+                j: file+1,
             });
-            rightDown++;
-        }
-        if(board[rank-rightDown] && board[rank-rightDown][file+rightDown]?.piece
-            && board[rank-rightDown][file+rightDown].piece.color != this.color){
-                moves.push({
-                    i: rank-rightDown,
-                    j: file+rightDown,
-                });
-        }
-        while(board[rank-leftDown] && board[rank-leftDown][file-leftDown]?.piece === null){
+        if(board[rank-2] && board[rank-2][file-1] && board[rank-2][file-1].piece?.color != this.color)
             moves.push({
-                i: rank-leftDown,
-                j: file-leftDown,
+                i: rank-2,
+                j: file-1,
             });
-            leftDown++;
-        }
-        if(board[rank-leftDown] && board[rank-leftDown][file-leftDown]?.piece
-            && board[rank-leftDown][file-leftDown].piece.color != this.color){
-                moves.push({
-                    i: rank-leftDown,
-                    j: file-leftDown,
-                });
-        }
+        if(board[rank+1] && board[rank+1][file+2] && board[rank+1][file+2].piece?.color != this.color)
+            moves.push({
+                i: rank+1,
+                j: file+2,
+            });
+        if(board[rank-1] && board[rank-1][file+2] && board[rank-1][file+2].piece?.color != this.color)
+            moves.push({
+                i: rank-1,
+                j: file+2,
+            });  
+        if(board[rank+1] && board[rank+1][file-2] && board[rank+1][file-2].piece?.color != this.color)
+            moves.push({
+                i: rank+1,
+                j: file-2,
+            });
+        if(board[rank-1] && board[rank-1][file-2] && board[rank-1][file-2].piece?.color != this.color)
+            moves.push({
+                i: rank-1,
+                j: file-2,
+            });
         return moves;
     }
-
 }

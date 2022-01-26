@@ -57,7 +57,6 @@ export class Rook extends Piece{
                 });
         }
         while(board[rank][file-right] && !board[rank][file-right].piece){
-            console.log(board[rank][file-right])
             moves.push({
                 i:rank,
                 j:file-right,

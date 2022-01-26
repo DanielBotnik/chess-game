@@ -1,96 +1,71 @@
-
-
 <script defer>
-import { debug } from "svelte/internal";
 
+import * as consts from '../assets/constants.js';
 
-let clock = null
-let firstClock = '00:00';
-let firstName = 'Shira Madar';
-let secondClock = '00:00';
-let secondName = 'Daniel Botnik';
-let turn = 0;
-let data = [ ["1"] ]
-let dataPointer = [1 , 1] //turn , white = 1 | black = 2
-let dataCounter;
-let dataFEN = [ ["1"] ] 
-let newRow
-let newFen
-let lastTurn
-let lastFen
-	
+    let clock;
+    let table;
+
+    let firstClock = '00:00';
+    let firstName = 'Shira Madar';
+    let secondClock = '00:00';
+    let secondName = 'Daniel Botnik';
+
+    let currentTurn = 1;
+    let shownTurn = 1;
+    let moves = [];
+    let boardFens = ['rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR'];
+
+    export var changeBoard;
+
 
     export function addMove(color, value, fen) {
-        if(color === 'w'){
-            turn++
-            dataPointer = [turn , 1]
-            if(turn==1){
-                data = [["1", value]]
-                dataFEN = [["1", fen]]
-            }
-            else {
-                newRow = [turn, value]
-                data = [...data, [...newRow]] 
-                newFen = [turn, fen]
-                dataFEN = [...data, [...newFen]] 
-            }
+        if(currentTurn % 2)
+            moves.push([value]);
+        else {
+            moves[Math.floor((currentTurn-1) / 2)].push(value);
         }
-        else{
-            dataPointer[1] = 2
-            lastTurn = data.pop() //shift
-            lastTurn = [...lastTurn, value]
-            data = [...data, [...lastTurn]] 
-            lastFen = dataFEN.pop() //shift
-            lastFen = [...lastFen, fen]
-            dataFEN = [...dataFEN, [...lastFen]] 
+        moves = moves;
+        boardFens.push(fen);
+        currentTurn++;
+        shownTurn = currentTurn;
+    }
+
+    function clickOnMove(index,color) {
+        let newShownTurn = index * 2 + color + 2;
+        if(shownTurn + 1 === newShownTurn) {
+            oneTurnForward();
+            return;
         }
-        // markThePointer()
-        // unmarkThePointer()
-        //scrollToBottom('movesTable')
-	}
-
-
-
-    let t = 0
-    export function markThePointer() {
-        var table = document.getElementById('movesTable');
-        var row = table.getElementsByTagName("tr")[dataPointer[0] - 1];
-        var roww = data[dataPointer[0] - 1]
-        var current = roww[dataPointer[1]]
-        console.log("row from table="+row.innerText)
-        console.log("row from data="+roww)
-        console.log("current="+current)
-        // var cell = row.getElementsByTagName("td")[t]
-        // t++
-        // cell.style.backgroundColor="#ADFF2F"
+        shownTurn = newShownTurn;
+        changeBoard(boardFens[shownTurn-1]);
     }
 
-    export function unmarkThePointer() {
-        if(t>1){
-        var table = document.getElementById('movesTable');
-        var row = table.getElementsByTagName("tr")[0];
-        var cell = row.getElementsByTagName("td")[t-2]
-        cell.style.backgroundColor="transparent"
-        }
+    function oneTurnBack() {
+        if(shownTurn < 2)
+            return;
+        shownTurn--;
+        changeBoard(boardFens[shownTurn-1]);
     }
 
-
-
-    function scrollToBottom(id) {
-        //notWorking
-        let table = document.getElementById(id)
-        // alert(table.offsetHeight.valueOf()) - Thats the reason
-        window.scrollBy({ 
-            top: table.offsetHeight,
-            behavior: 'smooth' 
-        });
-
+    function oneTurnForward() {
+        if(shownTurn >= currentTurn)
+            return;
+        shownTurn++;
+        changeBoard(boardFens[shownTurn-1]) ?
+        new Audio(consts.CAPTURE_AUDIO).play() :
+        new Audio(consts.MOVE_AUDIO).play();
     }
 
-    function clickOnMove() {
-        alert(e.target.innerText); //current cell
-    alert(e.target.parentNode.innerText); //Current row.
+    function gotoCurrent() {
+        shownTurn = currentTurn;
+        changeBoard(boardFens[shownTurn-1]);
     }
+
+    function gotoStart() {
+        shownTurn = 1;
+        changeBoard(boardFens[shownTurn-1]);
+    }
+
 </script>
 
 
@@ -99,36 +74,37 @@ let lastFen
 </svelte:head>
 
 <div class='clock' bind:this={clock}>
-        <h1>{firstClock}</h1>
-        <p>{firstName}</p>
-        <br>
-        <button class="btn"><i class="change sides"></i><ion-icon name="swap"></ion-icon></button>
-		<button class="btn"><i class="go to start"></i><ion-icon name="rewind"></ion-icon></button>
-		<button class="btn"><i class="one back"></i><ion-icon name="skip-backward"></ion-icon></button>
-		<button class="btn"><i class="one forward"></i><ion-icon name="skip-forward"></ion-icon></button>
-		<button class="btn"><i class="go to end"></i><ion-icon name="fastforward"></ion-icon></button>
-        <br>
-        <table class="moves" id='movesTable'>
-            <tbody>
-            {#each data as row}
-                <tr>
-                    {#each row as cell}
-                    <td>
-                    <button class="movebutton" on:click={clickOnMove}>
-                    <h3 contenteditable="true" bind:innerHTML={cell} />
+    <h1>{firstClock}</h1>
+    <p>{firstName}</p>
+    <br>
+    <button class="btn"><i class="change sides"></i><ion-icon name="swap"></ion-icon></button>
+    <button class="btn" on:click={gotoStart}><i class="go to start"></i><ion-icon name="rewind"></ion-icon></button>
+    <button class="btn" on:click={oneTurnBack}><i class="one back"></i><ion-icon name="skip-backward"></ion-icon></button>
+    <button class="btn" on:click={oneTurnForward}><i class="one forward"></i><ion-icon name="skip-forward"></ion-icon></button>
+    <button class="btn" on:click={gotoCurrent}><i class="go to end"></i><ion-icon name="fastforward"></ion-icon></button>
+    <br>
+    <table class="moves" id='movesTable' bind:this={table}>
+        <tbody>
+        {#each moves as row,index}
+            <tr>
+                <td>{index+1}</td>
+                {#each row as cell,color}
+                <td>
+                    <button class="movebutton" on:click={() => clickOnMove(index,color)}>
+                        <h3 contenteditable="true" class:current-move={shownTurn-2 === index * 2 + color}>{cell}</h3>
                     </button>
-                    </td>
-                    {/each}
-                </tr>
-            {/each}
-        </tbody>
-        </table>
-        <button class="btn"><i class="change sides"></i><ion-icon name="log-out"></ion-icon></button>
-        <br>
-        <br>
-        <p>{secondName}</p>
-        <h1>{secondClock}</h1>
-        <br>
+                </td>
+                {/each}
+            </tr>
+        {/each}
+    </tbody>
+    </table>
+    <button class="btn"><i class="change sides"></i><ion-icon name="log-out"></ion-icon></button>
+    <br>
+    <br>
+    <p>{secondName}</p>
+    <h1>{secondClock}</h1>
+    <br>
 </div>
 
 
@@ -187,6 +163,10 @@ table tbody tr:nth-of-type(even) {
 .movebutton {
 	border: none;
     background-color: transparent;
+}
+
+.current-move {
+    background-color: #ADFF2F;
 }
 
 .movebutton:hover {

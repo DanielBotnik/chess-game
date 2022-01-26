@@ -21,6 +21,19 @@
 
     export var addClockMove;
 
+
+    //returns if there was a capture between the fens
+    export function changeBoard(fen){
+        let oldNumOfPieces = blackPieces.length + whitePieces.length;
+        changeBoardByFEN(fen);
+        clearPossibleMoves();
+        if(clickedCell)
+            clickedCell.clicked = false;
+        clickedCell = null;
+        console.log(blackPieces.length + whitePieces.length);
+        return blackPieces.length + whitePieces.length !== oldNumOfPieces;
+    }
+
     onMount(() => {
         board.style.width = `calc(${size}vmin + 2px)`;
         board.style.height = `calc(${size}vmin + 2px)`;
@@ -35,6 +48,8 @@
                     color: (i+j) % 2 === 0 ? 'black' : 'white',
                     piece: null,
                     div: null,
+                    clicked: false,
+                    possibleMove: false,
                 });
             });
         });
@@ -57,20 +72,20 @@
         }
         cells[0][0].piece = new Rook('w',1,1);
         cells[0][7].piece = new Rook('w',1,8);
-        cells[0][1].piece = new Bishop('w',1,2);
-        cells[0][6].piece = new Bishop('w',1,7);
-        cells[0][2].piece = new Knight('w',1,3);
-        cells[0][5].piece = new Knight('w',1,6);
+        cells[0][1].piece = new Knight('w',1,2);
+        cells[0][6].piece = new Knight('w',1,7);
+        cells[0][2].piece = new Bishop('w',1,3);
+        cells[0][5].piece = new Bishop('w',1,6);
         cells[0][3].piece = new Queen('w',1,4);
         cells[0][4].piece = new King('w',1,5);
         whiteKing = cells[0][4].piece;
 
         cells[7][0].piece = new Rook('b',8,1);
         cells[7][7].piece = new Rook('b',8,8);
-        cells[7][1].piece = new Bishop('b',8,2);
-        cells[7][6].piece = new Bishop('b',8,7);
-        cells[7][2].piece = new Knight('b',8,3);
-        cells[7][5].piece = new Knight('b',8,6);
+        cells[7][1].piece = new Knight('b',8,2);
+        cells[7][6].piece = new Knight('b',8,7);
+        cells[7][2].piece = new Bishop('b',8,3);
+        cells[7][5].piece = new Bishop('b',8,6);
         cells[7][3].piece = new Queen('b',8,4);
         cells[7][4].piece = new King('b',8,5);
         blackKing = cells[7][4].piece;
@@ -82,8 +97,8 @@
     }
 
     function clearPossibleMoves(){
-        for(var cell of possibleMoveCells)
-            cell.div.querySelector('.move-location')?.remove();
+        for(let cell of possibleMoveCells)
+            cell.possibleMove = false;
         possibleMoveCells.length = 0;
     }
 
@@ -92,40 +107,37 @@
     }
 
     function onCellClick(cell){
-        if([...cell.div.childNodes].map(node => node.className).includes('move-location')){
-            clearPossibleMoves();
+        if(cell.possibleMove){
             movePieceTo(clickedCell,cell);
             clearPossibleMoves();
-            clickedCell?.div.classList.remove('whitecellclicked','blackcellclicked');
-        }
-        else if(cell.piece === null || cell.div.classList.contains(`${cell.color}cellclicked`))
-        {
-            clearPossibleMoves();
-            cell.div.classList.remove(`${cell.color}cellclicked`);
-            clickedCell?.div.classList.remove('whitecellclicked','blackcellclicked');
-            clickedCell = null;
+            if(clickedCell) {
+                clickedCell.clicked = false;
+            }
+                
         }
         else {
             clearPossibleMoves();
-            clickedCell?.div.classList.remove('whitecellclicked','blackcellclicked');
-            cell.div.classList.add(`${cell.color}cellclicked`);
-            clickedCell = cell;
-            showMoves(cell);
+            if(clickedCell) {
+                clickedCell.clicked = false; 
+            }
+            if(!cell.piece || cell.clicked)
+                clickedCell = null;
+            else {
+                cell.clicked = !cell.clicked;
+                clickedCell = cell;
+                showMoves(cell);
+            }
         }
         cells = cells;
     }
 
     function showMoves(cell){
-        var legalMoves = [];
         for(var move of cell.piece.getMoves(cells)) {
-            if(isMoveLegal(cell,move))
-                legalMoves.push(move);
-        }
-        for(var move of legalMoves){
-            var moveSpan = document.createElement('span');
-            moveSpan.classList.add('move-location');
-            cells[move.i][move.j].div.appendChild(moveSpan);
-            possibleMoveCells.push(cells[move.i][move.j]);
+            if(isMoveLegal(cell,move)) {
+                cells[move.i][move.j].possibleMove = true;
+                possibleMoveCells.push(cells[move.i][move.j]);
+            }
+                
         }
     }
 
@@ -202,7 +214,8 @@
                         empty = 0
                     }
                     var color = cells[i][j].piece.color
-                    var piece = getPieceType(cells[i][j].piece).charAt(0);
+                    var pieceType = getPieceType(cells[i][j].piece);
+                    var piece = pieceType === 'knight' ? 'n' : pieceType.charAt(0);
 
                     fen += color === 'w' ? piece.toUpperCase() : piece.toLowerCase()
                 }
@@ -217,7 +230,9 @@
     }
 
     function changeBoardByFEN(fen) {
-        let increase = 0
+        let increase = 0;
+        whitePieces.length = 0;
+        blackPieces.length = 0;
         for(var i = 7 ; i >= 0 ; i--){
             for(var j = 0 ; j < 8 ; j++){
                 switch (fen.charAt(0)) {
@@ -253,21 +268,28 @@
                     break;
                     case 'k':
                        cells[i][j].piece = new King('b',i+1,j+1);
+                       blackKing = cells[i][j].piece;
                     break;
                     case 'K':
                        cells[i][j].piece = new King('w',i+1,j+1);
+                       whiteKing = cells[i][j].piece;
                     break;
                     default:
                         cells[i][j].piece = null;
-                        increase = Number(fen.charAt(0))
-                        increase--
+                        increase = Number(fen.charAt(0));
+                        increase--;
                         fen = increase + fen.substring(1);
                     break;
                 }
+                if(cells[i][j].piece) {
+                    cells[i][j].piece.color === 'w' ?
+                        whitePieces.push(cells[i][j].piece) :
+                        blackPieces.push(cells[i][j].piece);
+                }
                 if (increase == 0)
-                    fen = fen.substring(1)
+                    fen = fen.substring(1);
             }
-            fen = fen.substring(1)
+            fen = fen.substring(1);
         }
     }
 
@@ -297,7 +319,9 @@
 <div class='board' bind:this={board}>
     {#each [...cells].reverse() as row}
         {#each row as cell}
-        <div bind:this={cell.div} class={`${cell.color}cell`} on:click={() => {onCellClick(cell)}}>
+        <div bind:this={cell.div} class={`${cell.color}cell`} 
+            class:whitecellclicked={cell.clicked && cell.color === 'white'}
+            class:blackcellclicked={cell.clicked && cell.color === 'black'} on:click={() => {onCellClick(cell)}}>
             {#if cell.piece !== null}
                 <img class='piecesvg' src='images/{cell.piece.color}_{getPieceType(cell.piece)}.svg' alt=''> 
             {/if}
@@ -310,6 +334,9 @@
                 <span class='ranknumber'>
                     {cell.rank}
                 </span>
+            {/if}
+            {#if cell.possibleMove}
+                <span class='move-location'></span>
             {/if}
         </div>
         {/each}
@@ -381,7 +408,7 @@
         background-color: $blackColorClicked;
     }
 
-    :global(.move-location) {
+    .move-location {
         height: 35%;
         width: 35%;
         border-radius: 50%;

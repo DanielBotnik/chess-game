@@ -4,7 +4,7 @@ export class Pawn extends Piece {
     
     constructor(color,rank,file) {
         super(color,rank,file);
-        this.hasMoved = false;
+        this.hasMoved = !((color == 'w' && rank == 2 ) || (color == 'b' && rank == 7));
     }
 
     getMoves(board) {
