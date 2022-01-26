@@ -111,22 +111,23 @@ import * as consts from '../assets/constants.js';
 <style>
     .clock {
         position: absolute;
-        top: 80px;
+        top: 120px;
         left: 20px;
     }
 p{
-	font-family: 'Raleway',sans-serif;
+	/* font-family: 'Raleway',sans-serif; */
+    font-family: 'Lato', sans-serif;
     font-size: 22px;
 }
 h1{ 
-	font-family: 'Raleway',sans-serif;
+	font-family: 'Lato', sans-serif;
     font-size: 35px;
 }
 table {
     border-collapse: collapse;
     margin: 25px 0;
     font-size: 0.9em;
-    font-family: sans-serif;
+    font-family: 'Lato', sans-serif;;
     min-width: 320px;
     box-shadow: 0 0 20px rgba(0, 0, 0, 0.15);
 }

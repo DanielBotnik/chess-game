@@ -2,9 +2,9 @@ import { Piece } from './piece'
 
 export class Rook extends Piece{
     
-    constructor(color,rank,file){
+    constructor(color,rank,file,hasMoved){
         super(color,rank,file);
-        this.hasMoved = false;
+        this.hasMoved = !!hasMoved;
     }
     
     getMoves(board) {
@@ -42,7 +42,6 @@ export class Rook extends Piece{
                 });
         }
         while(board[rank][file+left] && !board[rank][file+left].piece){
-            console.log(board[rank][file+left])
             moves.push({
                 i:rank,
                 j:file+left,
@@ -71,5 +70,10 @@ export class Rook extends Piece{
                 });
         }
         return moves;
+    }
+
+    moveToReal(board,move){
+        this.hasMoved = true;
+        super.moveToReal(board,move);
     }
 }
