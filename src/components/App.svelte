@@ -7,7 +7,8 @@
 	import io from 'socket.io-client';
 	
 	// const socket = io('http://localhost:4919');
-	let board = null;
+	let board;
+	let clock;
 
 	// socket.on('set-color-start',res => {
 	// 	console.log(res);
@@ -37,9 +38,6 @@
 	// 	socket.emit('playing-move',jsonObject);
 	// }
 
-	
-	let clock;
-	let board;
 	// const socket = io('ws://localhost:8080');
 
 	// socket.on('message', text => {
@@ -64,13 +62,8 @@
 
 </script>
 <div>
-<!-- 	<Clock bind:this={clock} changeBoard={changeBoardFromClock} />
+	<Clock bind:this={clock} changeBoard={changeBoardFromClock} />
 	<Board bind:this={board} size={70} addClockMove={callClock} changeBoard={changeBoardFromClock}/>
-	<!-- <Board size={70}/> -->
- -->
-	<!-- <Clock bind:this={clock}/>
-	<Board size={70} addClockMove={callClock}/>
-	<Chat/> -->
-	<Start/>
+	<Chat/>
 <!-- 	<Board size={70}  bind:this={board}/> -->
 </div>

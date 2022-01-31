@@ -13,7 +13,7 @@ import * as consts from '../assets/constants.js';
     let currentTurn = 1;
     let shownTurn = 1;
     let moves = [];
-    let boardFens = ['rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR'];
+    let boardFens = [consts.START_FEN];
 
     export var changeBoard;
 

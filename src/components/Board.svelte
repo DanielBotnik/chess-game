@@ -38,7 +38,6 @@
         if(clickedCell)
             clickedCell.clicked = false;
         clickedCell = null;
-        console.log(blackPieces.length + whitePieces.length);
         return blackPieces.length + whitePieces.length !== oldNumOfPieces;
     }
 
@@ -55,13 +54,10 @@
                     file: j+1,
                     color: (i+j) % 2 === 0 ? 'black' : 'white',
                     piece: null,
-                    div: null,
                     clicked: false,
                     possibleMove: false,
-// ===
 //                     checked: false,
-//                     possibleMove: false,
-//                     promote: null,
+                    promote: null,
 // main
                 });
             });
@@ -113,21 +109,26 @@
         }
     }
 
-//     function clearPossibleMoves() {
-//         for(var cell of possibleMoveCells) {
-//             cell.possibleMove = false;
-//         }
-//         for(var cell of promotingCells) {
-//             cell.promote = null;
-//         }
+    function clearPossibleMoves() {
+        for(let cell of possibleMoveCells) {
+            cell.possibleMove = false;
+        }
         possibleMoveCells.length = 0;
-        if(clickedCell)
+        if(clickedCell) {
             clickedCell.clicked = false;
+            clickedCell = null;
+        }   
+        cells = cells;
+    }
+
+    function clearPromotingMoves() {
+        for(let cell of promotingCells) {
+            cell.promote = null;
+        }
         if(pawnPromoting) {
             getPieceCell(pawnPromoting).piece = pawnPromoting;
             pawnPromoting = null;
         }
-        promotingCells.length = 0;
     }
 
     function getPieceType(piece){
@@ -135,6 +136,10 @@
     }
 
     function onCellClick(cell){
+        if(clickedCell === cell) {
+            clearPossibleMoves();
+            return;
+        }
         if(cell.possibleMove){
             movePieceTo(clickedCell,cell);
             clearPossibleMoves();
@@ -142,76 +147,40 @@
                 clickedCell.clicked = false;
             }
                 
-//         if(cell.promote)
-//             return;
-//         if(cell.rank===1 && cell.file === 2)
-//             console.log(blackPieces);
-//         if(cell.possibleMove) {
-//             clearPossibleMoves();
-//             movePieceTo(clickedCell.piece,cell);
-//             //clearPossibleMoves();
-//         }
-//         else if(cell.piece === null || cell.clicked ) {
-//             clearPossibleMoves();
-//             cell.clicked = false;
-//             clickedCell = null;
+            if(cell.promote) {
+                return;
+            }
         }
         else {
-            // if(cell.piece.color !== color)
-            //     return;
-            // if(cell.piece.color === 'b' && whiteTurn)
-            //     return;
-            // if(cell.piece.color ==='w' && !whiteTurn)
-            //     return;
             clearPossibleMoves();
+            if(pawnPromoting) {
+                clearPromotingMoves();
+                return;
+            }
             if(clickedCell) {
                 clickedCell.clicked = false; 
             }
             if(!cell.piece || cell.clicked)
                 clickedCell = null;
             else {
-                cell.clicked = !cell.clicked;
                 clickedCell = cell;
                 showMoves(cell);
             }
-//             cell.clicked = true;
-//             clickedCell = cell;
-//             console.log(cell);
-//             showMoves(cell);
         }
         cells = cells;
     }
 
     function showMoves(cell){
-
-        for(var move of cell.piece.getMoves(cells)) {
+        for(let move of cell.piece.getMoves(cells)) {
             if(isMoveLegal(cell,move)) {
                 cells[move.i][move.j].possibleMove = true;
                 possibleMoveCells.push(cells[move.i][move.j]);
             }
-                
-         }
-
-//         for(var move of getLegalMoves(cell)){
-//             cells[move.i][move.j].possibleMove = true;
-//             possibleMoveCells.push(cells[move.i][move.j]);
-//         }
-//         console.log('endShowMoves');
-//     }
-
-//     function getLegalMoves(cell){
-//         var legalMoves = [];
-//         try {
-//         for(var move of cell.piece.getMoves(cells)){
-//             if(isMoveLegal(cell,move))
-//                 legalMoves.push(move);
-//         }
-//         }catch(err) {console.log(err);console.log(cell);}
-//         return legalMoves;
+        }
     }
 
     function isMoveLegal(cell,move){
-        var pieceBefore = cells[move.i][move.j]?.piece;
+        let pieceBefore = cells[move.i][move.j]?.piece;
         if(pieceBefore && move.special !== 'castling') {
             if(pieceBefore.color === 'w')
                 whitePieces = whitePieces.filter((piece) => {return pieceBefore !== piece});
@@ -387,36 +356,27 @@
         }
     }
 
-    function movePieceTo(pieceCell,moveToCell){
-        var moveValue = makeAMove(pieceCell,moveToCell)
-        var color = pieceCell.piece.color
-        var audio = moveToCell.piece ? 
-        new Audio('sounds/public_sound_standard_Capture.ogg') : new Audio('sounds/public_sound_standard_Move.ogg');
-        if(moveToCell.piece) {
-            if(moveToCell.piece.color === 'w')
-                whitePieces = whitePieces.filter((piece) => {return moveToCell.piece !== piece});
-            else 
-                blackPieces = blackPieces.filter((piece) => {return moveToCell.piece !== piece});
-//     function movePieceTo(pieceMoving,moveToCell){
-//         var audio = null;
-//         //Removing check class from checked king ,if king moved he cannot be in check ;-)
-//         if(pieceMoving.color === 'w')
-//             getPieceCell(whiteKing).checked = false;
-//         else
-//             getPieceCell(blackKing).checked = false;
-//         //Handle Promotion
-//         if(getPieceType(pieceMoving) === 'pawn' && 
-//         ((pieceMoving.color === 'b' && moveToCell.rank === 1) || (pieceMoving.color === 'w' && moveToCell.rank === 8))) {
-//             var movingDirection = pieceMoving.color === 'w' ? -1 : 1;
-//             pawnPromoting = pieceMoving;
-//             getPieceCell(pieceMoving).piece = null;
-//             for(var i = 0; i < 4 ; i++) {
-//                 promotingCells.push(cells[moveToCell.rank-1+movingDirection * i][moveToCell.file - 1]);
-//                 cells[moveToCell.rank-1+movingDirection * i][moveToCell.file-1].promote = pieceMoving.color;
-//             }
-//             return;
+    function movePieceTo(pieceMoving,moveToCell){
+        let moveValue = makeAMove(pieceMoving,moveToCell)
+        var audio = null;
+        //Removing check class from checked king ,if king moved he cannot be in check ;-)
+        if(pieceMoving.color === 'w')
+            getPieceCell(whiteKing).checked = false;
+        else
+            getPieceCell(blackKing).checked = false;
+        //Handle Promotion
+        if(getPieceType(pieceMoving.piece) === 'pawn' && 
+        ((pieceMoving.piece.color === 'b' && moveToCell.rank === 1) || (pieceMoving.piece.color === 'w' && moveToCell.rank === 8))) {
+            var movingDirection = pieceMoving.piece.color === 'w' ? -1 : 1;
+            pawnPromoting = pieceMoving.piece;
+            getPieceCell(pieceMoving).piece = null;
+            for(var i = 0; i < 4 ; i++) {
+                promotingCells.push(cells[moveToCell.rank-1+movingDirection * i][moveToCell.file - 1]);
+                cells[moveToCell.rank-1+movingDirection * i][moveToCell.file-1].promote = pawnPromoting.color;
+            }
+            cells = cells;
+            return;
         }
-        //Handling En Passant
         if(getPieceType(pieceMoving) === 'pawn' && Math.abs(moveToCell.rank-pieceMoving.rank) === 2) {
             if(enPassantPawn)
                 enPassantPawn.enPassant = false;
@@ -427,110 +387,100 @@
             cells[moveToCell.rank-(pieceMoving.color === 'w' ? 2 : 0)][moveToCell.file-1].piece = null;
             audio = new Audio('sounds/public_sound_standard_Capture.ogg');
         }
-        //End of handling En Passant
         if(!audio)
-            audio = moveToCell.piece && pieceMoving.color != moveToCell.piece.color? 
+            audio = moveToCell.piece && pieceMoving.color != moveToCell.piece.color ? 
             new Audio('sounds/public_sound_standard_Capture.ogg') : new Audio('sounds/public_sound_standard_Move.ogg');
         if(moveToCell.piece && pieceMoving.color != moveToCell.piece.color)
             removePiece(moveToCell.piece);
-        pieceMoving.moveToReal(cells,{
+        pieceMoving.piece.moveToReal(cells,{
             i: moveToCell.rank-1,
             j: moveToCell.file-1,
             special: pieceMoving.color === moveToCell.piece?.color ? 'castling' : '',
         });
-        var fen = createFEN();
-        addClockMove(color, moveValue, fen)
+        
 
-//         whiteTurn = !whiteTurn;
-//         if(enPassantPawn && enPassantPawn !== pieceMoving)
-//             enPassantPawn.enPassant = false;
-//         if(isKingChecked(pieceMoving.color === 'w' ? 'b' : 'w')){
-//             var checkedKing = pieceMoving.color === 'b' ? whiteKing : blackKing;
-//             cells[checkedKing.rank-1][checkedKing.file-1].checked = true;
-//             if(isCheckMate(checkedKing.color)) {
-//                 audio = new Audio('sounds/public_sound_standard_Checkmate.ogg');
-//             }
-//         }
-//         audio.play();
-//         cells = cells;
-//         sendMoveToServer(clickedCell.rank,clickedCell.file,moveToCell.rank,moveToCell.file);
-//     }
-
-//     function getPieceCell(piece) {
-//         return cells[piece.rank-1][piece.file-1];
-//     }
-
-//     function removePiece(piece) {
-//         if(piece.color === 'w')
-//             whitePieces = whitePieces.filter(p => p != piece);
-//         else
-//             blackPieces = blackPieces.filter(p => p != piece);
-//     }
-//     //Is the color checked, for example if isCheckMate('w') === True ==> Black won
-//     function isCheckMate(color) {
-//         var piecesToCheck = color === 'w' ? whitePieces : blackPieces;
-//         for(var piece of piecesToCheck) {
-//             if(getLegalMoves(getPieceCell(piece)).length)
-//                 return false;
-//         }
-//         return true;
-//     }
-
-//     function promotePiece(promoteTo,promoteFile) {
-//         var pieceAfterPromote = null;
-//         var promoteRank = pawnPromoting.color === 'w' ? 8 : 1;
-//         switch(promoteTo) {
-//             case 'q':
-//                 pieceAfterPromote = new Queen(pawnPromoting.color,promoteRank,promoteFile);
-//                 break;
-//             case 'n':
-//                 pieceAfterPromote = new Knight(pawnPromoting.color,promoteRank,promoteFile);
-//                 break;
-//             case 'r':
-//                 pieceAfterPromote = new Rook(pawnPromoting.color,promoteRank,promoteFile);
-//                 break;
-//             case 'b':
-//                 pieceAfterPromote = new Bishop(pawnPromoting.color,promoteRank,promoteFile);
-//                 break;
-//         }
-//         cells[pawnPromoting.rank-1][pawnPromoting.file-1].piece = null;
-//         removePiece(pawnPromoting);
-//         if(pawnPromoting.color === 'w')
-//             whitePieces.push(pieceAfterPromote);
-//         else
-//             blackPieces.push(pieceAfterPromote);
-//         pawnPromoting = null;
-//         var audio = null;
-//         if(cells[promoteRank-1][promoteFile-1].piece) {
-//             removePiece(cells[promoteRank-1][promoteFile-1].piece);
-//             audio = new Audio('sounds/public_sound_standard_Capture.ogg');
-//         }
-//         cells[promoteRank-1][promoteFile-1].piece = pieceAfterPromote;
-//         if(!audio)
-//             audio = new Audio('sounds/public_sound_standard_Move.ogg');
-//         audio.play();
-//         clearPossibleMoves();
-    }
-
-    function playMovePGN(move){
-        var pieces = whiteTurn ? whitePieces : blackPieces;
-        var king = whiteTurn ? whiteKing : blackKing;
-        if(move.includes('.'))
-            move = move.split('.')[1].trim();
-        if(move[0] === 'O'){
-            if(move === 'O-O-O'){
-                movePieceTo(king,cells[7-(whiteTurn)*7][0])
+        whiteTurn = !whiteTurn;
+        if(enPassantPawn && enPassantPawn !== pieceMoving)
+            enPassantPawn.enPassant = false;
+        if(isKingChecked(pieceMoving.color === 'w' ? 'b' : 'w')){
+            var checkedKing = pieceMoving.color === 'b' ? whiteKing : blackKing;
+            cells[checkedKing.rank-1][checkedKing.file-1].checked = true;
+            if(isCheckMate(checkedKing.color)) {
+                audio = new Audio('sounds/public_sound_standard_Checkmate.ogg');
             }
-            else if(move === 'O-O'){
-                movePieceTo(king,cells[7-(whiteTurn)*7][7]);
-            }
-            else {
-                // Error
-            }
-            return;
         }
+        audio.play();
+        addClockMove(pieceMoving.color, moveValue, createFEN());
+        cells = cells;
+        // sendMoveToServer(clickedCell.rank,clickedCell.file,moveToCell.rank,moveToCell.file);
     }
 
+    function getPieceCell(piece){
+        return cells[piece.rank-1][piece.file-1];
+    }
+
+    function removePiece(piece) {
+        if(piece.color === 'w')
+            whitePieces = whitePieces.filter(p => p !== piece);
+        else
+            blackPieces = blackPieces.filter(p => p !== piece);
+    }
+
+//     //Is the color checked, for example if isCheckMate('w') === True ==> Black won
+    function isCheckMate(color) {
+        var piecesToCheck = color === 'w' ? whitePieces : blackPieces;
+        for(let piece of piecesToCheck) {
+            if(piece.getMoves(cells).filter(move => isMoveLegal(getPieceCell(piece),move)).length)
+                return false;
+        }
+        console.log('stefan');
+        return true;
+    }
+
+    function promotePiece(cell) {
+        const promoteTo = '_qnrbbrnq'[cell.rank];
+        const file = cell.file;
+        let pieceAfterPromote = null;
+        var promoteRank = pawnPromoting.color === 'w' ? 8 : 1;
+        switch(promoteTo) {
+            case 'q':
+                pieceAfterPromote = new Queen(pawnPromoting.color,promoteRank,file);
+                break;
+            case 'n':
+                pieceAfterPromote = new Knight(pawnPromoting.color,promoteRank,file);
+                break;
+            case 'r':
+                pieceAfterPromote = new Rook(pawnPromoting.color,promoteRank,file);
+                break;
+            case 'b':
+                pieceAfterPromote = new Bishop(pawnPromoting.color,promoteRank,file);
+                break;
+        }
+        getPieceCell(pawnPromoting).piece = null;
+        removePiece(pawnPromoting);
+        if(pawnPromoting.color === 'w')
+            whitePieces.push(pieceAfterPromote);
+        else
+            blackPieces.push(pieceAfterPromote);
+        pawnPromoting = null;
+        var audio = null;
+        if(cells[promoteRank-1][file-1].piece) {
+            removePiece(cells[promoteRank-1][file-1].piece);
+            audio = new Audio('sounds/public_sound_standard_Capture.ogg');
+        }
+        cells[promoteRank-1][file-1].piece = pieceAfterPromote;
+        if(!audio)
+            audio = new Audio('sounds/public_sound_standard_Move.ogg');
+        audio.play();
+        clearPromotingMoves();
+        clearPossibleMoves();
+        cells = cells;
+        //TODO: maybe find better fix
+        setTimeout(() => {
+            clearPossibleMoves();
+            cells = cells;
+        }, 0);
+    }
 
     function initBoardFromFEN(cells,FENString){
         var segements = FENString.split(' ');
@@ -668,32 +618,22 @@
 <div class='board' bind:this={board}>
     {#each [...cells].reverse() as row}
         {#each row as cell}
-        <div bind:this={cell.div} class={`${cell.color}cell`} 
+        <div class={`${cell.color}cell`} 
             class:whitecellclicked={cell.clicked && cell.color === 'white'}
-            class:blackcellclicked={cell.clicked && cell.color === 'black'} on:click={() => {onCellClick(cell)}}>
-            {#if cell.piece !== null}
-                <img class='piecesvg' src='images/{cell.piece.color}_{getPieceType(cell.piece)}.svg' alt=''> 
-<!-- ===
-    {#each boardSide === 'w' ? [...cells].reverse() : cells as row}
-        {#each boardSide === 'w' ? row : [...row].reverse() as cell}
-        <div
-            class={`${cell.color}cell`} on:click={() => {onCellClick(cell)}}
-            class:clicked='{cell.clicked}'>
+            class:blackcellclicked={cell.clicked && cell.color === 'black'} on:click={() => {cell.promote ? promotePiece(cell) : onCellClick(cell)}}>
             {#if cell.promote}
-                <span class='promote-cell'>
-                </span>
+                <span class='promote-cell'></span>
                 {#if cell.rank === 1 || cell.rank === 8}
-                    <img class='piecesvg-promote' src='images/{cell.promote}_queen.svg' alt='' on:click={promotePiece('q',cell.file)}/>
+                    <img class='piecesvg-promote' src='images/{cell.promote}_queen.svg' alt=''/>
                 {:else if cell.rank === 2 || cell.rank === 7}
-                    <img class='piecesvg-promote' src='images/{cell.promote}_knight.svg' alt='' on:click={promotePiece('n',cell.file)}/>
+                    <img class='piecesvg-promote' src='images/{cell.promote}_knight.svg' alt=''/>
                 {:else if cell.rank === 3 || cell.rank === 6}
-                    <img class='piecesvg-promote' src='images/{cell.promote}_rook.svg' alt='' on:click={promotePiece('r',cell.file)}/>
+                    <img class='piecesvg-promote' src='images/{cell.promote}_rook.svg' alt=''/>
                 {:else if cell.rank === 4 || cell.rank === 5}
-                    <img class='piecesvg-promote' src='images/{cell.promote}_bishop.svg' alt='' on:click={promotePiece('b',cell.file)}/>
+                    <img class='piecesvg-promote' src='images/{cell.promote}_bishop.svg' alt=''/>
                 {/if}
             {:else if cell.piece}
-                    <img class='piecesvg' src='images/{cell.piece.color}_{getPieceType(cell.piece)}.svg' alt=''>
-main -->
+                <img class='piecesvg' src='images/{cell.piece.color}_{getPieceType(cell.piece)}.svg' alt=''>
             {/if}
             {#if (cell.rank === 1 && boardSide === 'w') || (cell.rank === 8 && boardSide === 'b')}
                 <span class='filenumber'>
@@ -706,12 +646,7 @@ main -->
                 </span>
             {/if}
             {#if cell.possibleMove}
-                <span class='move-location'></span>
-<!-- ===
                 <span class={cell.piece ? 'piece-possible-move' : 'move-location'}></span>
-            {:else if cell.checked}
-                <span class={'location-check'}></span>
-main -->
             {/if}
         </div>
         {/each}
@@ -847,7 +782,8 @@ main -->
         width: 35%;
         border-radius: 50%;
         background:black;
-        
+    }
+    
     .piecesvg-promote {
         min-height: 100%;
         min-width: 100%;
