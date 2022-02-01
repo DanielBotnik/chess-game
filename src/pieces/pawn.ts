@@ -1,20 +1,23 @@
-import { Piece } from './piece'
+import type { Board, Move } from '../types';
+import { PieceColor } from '../types';
+import { Piece } from './piece';
 
 export class Pawn extends Piece {
     
-    constructor(color,rank,file,enPassant) {
+    public hasMoved: boolean;
+    public enPassant: boolean;
+
+    constructor(color: PieceColor, rank: number, file: number) {
         super(color,rank,file);
-        this.hasMoved = !((color == 'w' && rank == 2 ) || (color == 'b' && rank == 7));
-//         this.hasMoved = !((rank === 2 && color === 'w') || (rank === 7 && color === 'b'));
-//         this.enPassant = false;
-//         this.enPassant = !!enPassant;
+        this.hasMoved = !((color == PieceColor.White && rank == 2 ) || (color == PieceColor.Black && rank == 7));
+        this.enPassant = false;
     }
 
-    getMoves(board) {
-        var rank = this.rank - 1;
-        var file = this.file - 1;
-        var moves = [];
-        var moveDirection = this.color === 'w' ? 1 : -1;
+    getMoves(board: Board): Array<Move> {
+        let rank: number = this.rank - 1;
+        let file: number = this.file - 1;
+        let moves: Array<Move> = [];
+        let moveDirection: number = this.color === PieceColor.White ? 1 : -1;
         if(!board[rank+moveDirection][file].piece){
             moves.push({
                 i: rank+moveDirection,
@@ -42,14 +45,14 @@ export class Pawn extends Piece {
             })
         }
         if(board[rank][file-1]?.piece && board[rank][file-1].piece.color != this.color &&
-            board[rank][file-1].piece.constructor.name === 'Pawn' && board[rank][file-1].piece.enPassant)
+            board[rank][file-1].piece instanceof Pawn && (board[rank][file-1].piece as Pawn).enPassant)
             moves.push({
                 i: rank+moveDirection,
                 j: file-1,
                 special: 'enPassant'
             });
         if(board[rank][file+1]?.piece && board[rank][file+1].piece.color != this.color &&
-            board[rank][file+1].piece.constructor.name === 'Pawn' && board[rank][file+1].piece.enPassant)
+            board[rank][file+1].piece instanceof Pawn && (board[rank][file+1].piece as Pawn).enPassant)
             moves.push({
                 i: rank+moveDirection,
                 j: file+1,
@@ -58,7 +61,7 @@ export class Pawn extends Piece {
         return moves;
     }
 
-    moveToReal(board,move){
+    moveToReal(board: Board,move: Move): void {
         if(Math.abs(move.i - this.rank+1) === 2)
             this.enPassant = true;
         this.hasMoved = true;

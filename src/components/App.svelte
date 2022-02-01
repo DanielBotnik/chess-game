@@ -1,4 +1,4 @@
-<script>
+<script lang="ts">
 	import Board from './Board.svelte';
 	import Clock from './Clock.svelte';
 	import Chat from './Chat.svelte';

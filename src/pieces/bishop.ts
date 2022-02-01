@@ -1,17 +1,18 @@
+import type { Board, Move, PieceColor } from '../types';
 import { Piece } from './piece'
 
 export class Bishop extends Piece {
     
-    constructor(color,rank,file){
+    constructor(color: PieceColor, rank: number, file: number){
         super(color,rank,file);
     }
 
-    getMoves(board) {
-        var rank = this.rank - 1;
-        var file = this.file - 1;
-        var moves = [];
-        var leftUp,rightUp,leftDown,rightDown;
-        leftUp = rightUp = leftDown = rightDown = 1;
+    getMoves(board: Board) : Array<Move> {
+        let rank: number = this.rank - 1;
+        let file: number = this.file - 1;
+        let moves: Array<Move> = [];
+        let leftUp: number = 1,rightUp: number = 1,leftDown: number = 1,rightDown: number = 1;
+        //TODO: Check if === null can be removed.
         while(board[rank+rightUp] && board[rank+rightUp][file+rightUp]?.piece === null){
             moves.push({
                 i: rank+rightUp,

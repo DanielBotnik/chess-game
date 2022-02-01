@@ -1,17 +1,21 @@
-import { Piece } from './piece'
+import { PieceColor } from '../types';
+import type { Move, Board } from '../types';
+import { Piece } from './piece';
 
-export class Rook extends Piece{
+export class Rook extends Piece {
     
-    constructor(color,rank,file,hasMoved){
+    public hasMoved: boolean;
+
+    constructor(color: PieceColor,rank: number,file: number){
         super(color,rank,file);
-        this.hasMoved = !!hasMoved;
+        this.hasMoved = [1,8].includes(file) && (color === PieceColor.White && rank === 1 || color === PieceColor.Black && rank === 8);
     }
     
-    getMoves(board) {
-        var rank = this.rank - 1;
-        var file = this.file - 1;
-        var moves = [];
-        var up, down, left, right;
+    getMoves(board: Board): Array<Move> {
+        let rank: number = this.rank - 1;
+        let file: number = this.file - 1;
+        let moves: Array<Move> = [];
+        let up: number, down: number, left: number, right: number;
         up = down = left = right = 1;
         while(board[rank+up] && !board[rank+up][file].piece){
             moves.push({
@@ -72,7 +76,7 @@ export class Rook extends Piece{
         return moves;
     }
 
-    moveToReal(board,move){
+    moveToReal(board: Board,move: Move): void {
         this.hasMoved = true;
         super.moveToReal(board,move);
     }

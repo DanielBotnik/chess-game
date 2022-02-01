@@ -1,37 +1,40 @@
-<script defer>
+<script defer lang="ts">
 
     import { onMount } from "svelte";
-    import { Bishop } from "../pieces/bishop.js";
-    import { Knight } from "../pieces/knight.js";
-    import { Pawn } from '../pieces/pawn.js';
-    import { Queen } from "../pieces/queen.js";
-    import { Rook } from "../pieces/rook.js";
-    import { King } from "../pieces/king.js";
+    import { Bishop } from "../pieces/bishop";
+    import { Knight } from "../pieces/knight";
+    import { Pawn } from '../pieces/pawn';
+    import { Queen } from "../pieces/queen";
+    import { Rook } from "../pieces/rook";
+    import { King } from "../pieces/king";
+    import type { Piece } from "../pieces/piece";
+    import type { Board, Cell } from '../types';
+    import { PieceColor } from "../types";
+    import { SquareColor } from '../types'
 
-    
     export var size;
     export var sendMoveToServer;
 
     let board = null;
     let boardSide = 'w';
     let color;
-    let clickedCell = null;
-    let pawnPromoting = null;
-    let possibleMoveCells = [];
-    let promotingCells = [];
-    let blackPieces = [];
-    let whitePieces = [];
-    let blackKing = null;
-    let whiteKing = null;
-    let cells = [];
-    let whiteTurn = true;
+    let clickedCell: Cell = null;
+    let pawnPromoting: Pawn = null;
+    let possibleMoveCells: Array<Cell> = [];
+    let promotingCells: Array<Cell> = [];
+    let blackPieces: Array<Piece> = [];
+    let whitePieces: Array<Piece> = [];
+    let blackKing: King = null;
+    let whiteKing: King = null;
+    let cells: Board = [];
+    let turn = true;
     let enPassantPawn = null;
 
     export var addClockMove;
 
 
     //returns if there was a capture between the fens
-    export function changeBoard(fen){
+    export function changeBoard(fen: string): boolean {
         let oldNumOfPieces = blackPieces.length + whitePieces.length;
         changeBoardByFEN(fen);
         clearPossibleMoves();
@@ -45,20 +48,20 @@
         board.style.width = `calc(${size}vmin + 2px)`;
         board.style.height = `calc(${size}vmin + 2px)`;
         Array.from({length: 8},(_) => {
-            cells.push([]);
+            cells.push(Array<Cell>());
         });
         Array.from({length: 8},(_,i) => {
             Array.from({length: 8},(_,j) => {
                 cells[7-i].push({
                     rank: i+1,
                     file: j+1,
-                    color: (i+j) % 2 === 0 ? 'black' : 'white',
+                    color: (i+j) % 2 === 0 ? SquareColor.Black: SquareColor.White,
                     piece: null,
                     clicked: false,
                     possibleMove: false,
-//                     checked: false,
+                    checked: false,
                     promote: null,
-// main
+
                 });
             });
         });
@@ -68,40 +71,40 @@
         initBoard(cells);
     });
 
-    function numberToLetter(num){
+    function numberToLetter(num: number): string{
         return String.fromCharCode(96 + num);
     }
 
-    function letterToNumber(letter){
+    function letterToNumber(letter: string): number{
         return letter.charCodeAt(0) - 96;
     }
 
-    function initBoard(cells){
+    function initBoard(cells: Array<Array<Cell>>): void {
         for(var i = 0 ; i < 8 ; i++) {
-            cells[6][i].piece = new Pawn('b',7,i+1);
+            cells[6][i].piece = new Pawn(PieceColor.Black,7,i+1);
             blackPieces.push(cells[6][i].piece);
-            cells[1][i].piece = new Pawn('w',2,i+1);
+            cells[1][i].piece = new Pawn(PieceColor.White,2,i+1);
             whitePieces.push(cells[1][i].piece);
         }
-        cells[0][0].piece = new Rook('w',1,1);
-        cells[0][7].piece = new Rook('w',1,8);
-        cells[0][1].piece = new Knight('w',1,2);
-        cells[0][6].piece = new Knight('w',1,7);
-        cells[0][2].piece = new Bishop('w',1,3);
-        cells[0][5].piece = new Bishop('w',1,6);
-        cells[0][3].piece = new Queen('w',1,4);
-        cells[0][4].piece = new King('w',1,5);
-        whiteKing = cells[0][4].piece;
+        cells[0][0].piece = new Rook(PieceColor.White,1,1);
+        cells[0][7].piece = new Rook(PieceColor.White,1,8);
+        cells[0][1].piece = new Knight(PieceColor.White,1,2);
+        cells[0][6].piece = new Knight(PieceColor.White,1,7);
+        cells[0][2].piece = new Bishop(PieceColor.White,1,3);
+        cells[0][5].piece = new Bishop(PieceColor.White,1,6);
+        cells[0][3].piece = new Queen(PieceColor.White,1,4);
+        cells[0][4].piece = new King(PieceColor.White,1,5);
+        whiteKing = cells[0][4].piece as King;
 
-        cells[7][0].piece = new Rook('b',8,1);
-        cells[7][7].piece = new Rook('b',8,8);
-        cells[7][1].piece = new Knight('b',8,2);
-        cells[7][6].piece = new Knight('b',8,7);
-        cells[7][2].piece = new Bishop('b',8,3);
-        cells[7][5].piece = new Bishop('b',8,6);
-        cells[7][3].piece = new Queen('b',8,4);
-        cells[7][4].piece = new King('b',8,5);
-        blackKing = cells[7][4].piece;
+        cells[7][0].piece = new Rook(PieceColor.Black,8,1);
+        cells[7][7].piece = new Rook(PieceColor.Black,8,8);
+        cells[7][1].piece = new Knight(PieceColor.Black,8,2);
+        cells[7][6].piece = new Knight(PieceColor.Black,8,7);
+        cells[7][2].piece = new Bishop(PieceColor.Black,8,3);
+        cells[7][5].piece = new Bishop(PieceColor.Black,8,6);
+        cells[7][3].piece = new Queen(PieceColor.Black,8,4);
+        cells[7][4].piece = new King(PieceColor.Black,8,5);
+        blackKing = cells[7][4].piece as King;
 
         for(var i = 0 ; i < 8 ; i++){
             blackPieces.push(cells[7][i].piece);
@@ -109,7 +112,7 @@
         }
     }
 
-    function clearPossibleMoves() {
+    function clearPossibleMoves(): void {
         for(let cell of possibleMoveCells) {
             cell.possibleMove = false;
         }
@@ -121,7 +124,7 @@
         cells = cells;
     }
 
-    function clearPromotingMoves() {
+    function clearPromotingMoves(): void {
         for(let cell of promotingCells) {
             cell.promote = null;
         }
@@ -131,11 +134,11 @@
         }
     }
 
-    function getPieceType(piece){
+    function getPieceType(piece: Piece): string {
         return piece.constructor.name.toLowerCase();
     }
 
-    function onCellClick(cell){
+    function onCellClick(cell: Cell): void {
         if(clickedCell === cell) {
             clearPossibleMoves();
             return;
@@ -170,7 +173,7 @@
         cells = cells;
     }
 
-    function showMoves(cell){
+    function showMoves(cell: Cell): void {
         for(let move of cell.piece.getMoves(cells)) {
             if(isMoveLegal(cell,move)) {
                 cells[move.i][move.j].possibleMove = true;
@@ -235,7 +238,7 @@
     }
 
     function isKingChecked(color){
-        var kingToCheck = color === 'w' ? whiteKing : blackKing;
+        var kingToCheck = color === 'w' ? whiteKing: blackKing;
         return kingToCheck.isChecked(cells);
     }
 
@@ -278,9 +281,9 @@
                     }
                     var color = cells[i][j].piece.color
                     var pieceType = getPieceType(cells[i][j].piece);
-                    var piece = pieceType === 'knight' ? 'n' : pieceType.charAt(0);
+                    var piece = pieceType === 'knight' ? 'n': pieceType.charAt(0);
 
-                    fen += color === 'w' ? piece.toUpperCase() : piece.toLowerCase()
+                    fen += color === 'w' ? piece.toUpperCase(): piece.toLowerCase()
                 }
             }
 
@@ -300,42 +303,42 @@
             for(var j = 0 ; j < 8 ; j++){
                 switch (fen.charAt(0)) {
                     case 'p':
-                       cells[i][j].piece = new Pawn('b',i+1,j+1);
+                       cells[i][j].piece = new Pawn(PieceColor.Black,i+1,j+1);
                     break;
                     case 'P':
-                       cells[i][j].piece = new Pawn('w',i+1,j+1);
+                       cells[i][j].piece = new Pawn(PieceColor.White,i+1,j+1);
                     break;
                     case 'r':
-                       cells[i][j].piece = new Rook('b',i+1,j+1);
+                       cells[i][j].piece = new Rook(PieceColor.Black,i+1,j+1);
                     break;
                     case 'R':
-                       cells[i][j].piece = new Rook('w',i+1,j+1);
+                       cells[i][j].piece = new Rook(PieceColor.White,i+1,j+1);
                     break;
                     case 'n':
-                       cells[i][j].piece = new Knight('b',i+1,j+1);
+                       cells[i][j].piece = new Knight(PieceColor.Black,i+1,j+1);
                     break;
                     case 'N':
-                       cells[i][j].piece = new Knight('w',i+1,j+1);
+                       cells[i][j].piece = new Knight(PieceColor.White,i+1,j+1);
                     break;
                     case 'b':
-                       cells[i][j].piece = new Bishop('b',i+1,j+1);
+                       cells[i][j].piece = new Bishop(PieceColor.Black,i+1,j+1);
                     break;
                     case 'B':
-                       cells[i][j].piece = new Bishop('w',i+1,j+1);
+                       cells[i][j].piece = new Bishop(PieceColor.White,i+1,j+1);
                     break;
                     case 'q':
-                       cells[i][j].piece = new Queen('b',i+1,j+1);
+                       cells[i][j].piece = new Queen(PieceColor.Black,i+1,j+1);
                     break;
                     case 'Q':
-                       cells[i][j].piece = new Queen('w',i+1,j+1);
+                       cells[i][j].piece = new Queen(PieceColor.White,i+1,j+1);
                     break;
                     case 'k':
-                       cells[i][j].piece = new King('b',i+1,j+1);
-                       blackKing = cells[i][j].piece;
+                       cells[i][j].piece = new King(PieceColor.Black,i+1,j+1);
+                       blackKing = cells[i][j].piece as King;
                     break;
                     case 'K':
-                       cells[i][j].piece = new King('w',i+1,j+1);
-                       whiteKing = cells[i][j].piece;
+                       cells[i][j].piece = new King(PieceColor.White,i+1,j+1);
+                       whiteKing = cells[i][j].piece as King;
                     break;
                     default:
                         cells[i][j].piece = null;
@@ -346,7 +349,7 @@
                 }
                 if(cells[i][j].piece) {
                     cells[i][j].piece.color === 'w' ?
-                        whitePieces.push(cells[i][j].piece) :
+                        whitePieces.push(cells[i][j].piece):
                         blackPieces.push(cells[i][j].piece);
                 }
                 if (increase == 0)
@@ -367,7 +370,7 @@
         //Handle Promotion
         if(getPieceType(pieceMoving.piece) === 'pawn' && 
         ((pieceMoving.piece.color === 'b' && moveToCell.rank === 1) || (pieceMoving.piece.color === 'w' && moveToCell.rank === 8))) {
-            var movingDirection = pieceMoving.piece.color === 'w' ? -1 : 1;
+            var movingDirection = pieceMoving.piece.color === 'w' ? -1: 1;
             pawnPromoting = pieceMoving.piece;
             getPieceCell(pieceMoving).piece = null;
             for(var i = 0; i < 4 ; i++) {
@@ -384,26 +387,26 @@
         }
         if(getPieceType(pieceMoving) === 'pawn' && moveToCell.file != pieceMoving.file && !moveToCell.piece){
             removePiece(moveToCell.piece);
-            cells[moveToCell.rank-(pieceMoving.color === 'w' ? 2 : 0)][moveToCell.file-1].piece = null;
+            cells[moveToCell.rank-(pieceMoving.color === 'w' ? 2: 0)][moveToCell.file-1].piece = null;
             audio = new Audio('sounds/public_sound_standard_Capture.ogg');
         }
         if(!audio)
             audio = moveToCell.piece && pieceMoving.color != moveToCell.piece.color ? 
-            new Audio('sounds/public_sound_standard_Capture.ogg') : new Audio('sounds/public_sound_standard_Move.ogg');
+            new Audio('sounds/public_sound_standard_Capture.ogg'): new Audio('sounds/public_sound_standard_Move.ogg');
         if(moveToCell.piece && pieceMoving.color != moveToCell.piece.color)
             removePiece(moveToCell.piece);
         pieceMoving.piece.moveToReal(cells,{
             i: moveToCell.rank-1,
             j: moveToCell.file-1,
-            special: pieceMoving.color === moveToCell.piece?.color ? 'castling' : '',
+            special: pieceMoving.color === moveToCell.piece?.color ? 'castling': '',
         });
         
 
-        whiteTurn = !whiteTurn;
+        turn = !turn;
         if(enPassantPawn && enPassantPawn !== pieceMoving)
             enPassantPawn.enPassant = false;
-        if(isKingChecked(pieceMoving.color === 'w' ? 'b' : 'w')){
-            var checkedKing = pieceMoving.color === 'b' ? whiteKing : blackKing;
+        if(isKingChecked(pieceMoving.color === 'w' ? 'b': 'w')){
+            var checkedKing = pieceMoving.color === 'b' ? whiteKing: blackKing;
             cells[checkedKing.rank-1][checkedKing.file-1].checked = true;
             if(isCheckMate(checkedKing.color)) {
                 audio = new Audio('sounds/public_sound_standard_Checkmate.ogg');
@@ -428,7 +431,7 @@
 
 //     //Is the color checked, for example if isCheckMate('w') === True ==> Black won
     function isCheckMate(color) {
-        var piecesToCheck = color === 'w' ? whitePieces : blackPieces;
+        var piecesToCheck = color === 'w' ? whitePieces: blackPieces;
         for(let piece of piecesToCheck) {
             if(piece.getMoves(cells).filter(move => isMoveLegal(getPieceCell(piece),move)).length)
                 return false;
@@ -441,7 +444,7 @@
         const promoteTo = '_qnrbbrnq'[cell.rank];
         const file = cell.file;
         let pieceAfterPromote = null;
-        var promoteRank = pawnPromoting.color === 'w' ? 8 : 1;
+        var promoteRank = pawnPromoting.color === 'w' ? 8: 1;
         switch(promoteTo) {
             case 'q':
                 pieceAfterPromote = new Queen(pawnPromoting.color,promoteRank,file);
@@ -482,7 +485,7 @@
         }, 0);
     }
 
-    function initBoardFromFEN(cells,FENString){
+    function initBoardFromFEN(cells: Board,FENString){
         var segements = FENString.split(' ');
         var rank = 7;
         var file = 0;
@@ -490,65 +493,65 @@
             for(var i = 0 ; i < segements[0].length && segements[0][i] != ' ' ; i++){
                 switch(segements[0][i]){
                     case 'P':
-                        cells[rank][file].piece = new Pawn('w',rank+1,file+1);
+                        cells[rank][file].piece = new Pawn(PieceColor.White,rank+1,file+1);
                         whitePieces.push(cells[rank][file].piece);
                         file++;
                         break;
                     case 'N':
-                        cells[rank][file].piece = new Knight('w',rank+1,file+1);
+                        cells[rank][file].piece = new Knight(PieceColor.White,rank+1,file+1);
                         whitePieces.push(cells[rank][file].piece);
                         file++;
                         break;
                     case 'B':
-                        cells[rank][file].piece = new Bishop('w',rank+1,file+1);
+                        cells[rank][file].piece = new Bishop(PieceColor.White,rank+1,file+1);
                         whitePieces.push(cells[rank][file].piece);
                         file++;
                         break;
                     case 'R':
-                        cells[rank][file].piece = new Rook('w',rank+1,file+1);
+                        cells[rank][file].piece = new Rook(PieceColor.White,rank+1,file+1);
                         whitePieces.push(cells[rank][file].piece);
                         file++;
                         break;
                     case 'Q':
-                        cells[rank][file].piece = new Queen('w',rank+1,file+1);
+                        cells[rank][file].piece = new Queen(PieceColor.White,rank+1,file+1);
                         whitePieces.push(cells[rank][file].piece);
                         file++;
                         break;
                     case 'K':
-                        cells[rank][file].piece = new King('w',rank+1,file+1);
+                        cells[rank][file].piece = new King(PieceColor.White,rank+1,file+1);
                         whitePieces.push(cells[rank][file].piece);
-                        whiteKing = cells[rank][file].piece;
+                        whiteKing = cells[rank][file].piece as King;
                         file++;
                         break;
                     case 'p':
-                        cells[rank][file].piece = new Pawn('b',rank+1,file+1);
+                        cells[rank][file].piece = new Pawn(PieceColor.Black,rank+1,file+1);
                         blackPieces.push(cells[rank][file].piece);
                         file++;
                         break;
                     case 'n':
-                        cells[rank][file].piece = new Knight('b',rank+1,file+1);
+                        cells[rank][file].piece = new Knight(PieceColor.Black,rank+1,file+1);
                         blackPieces.push(cells[rank][file].piece);
                         file++;
                         break;
                     case 'b':
-                        cells[rank][file].piece = new Bishop('b',rank+1,file+1);
+                        cells[rank][file].piece = new Bishop(PieceColor.Black,rank+1,file+1);
                         blackPieces.push(cells[rank][file].piece);
                         file++;
                         break;
                     case 'r':
-                        cells[rank][file].piece = new Rook('b',rank+1,file+1);
+                        cells[rank][file].piece = new Rook(PieceColor.Black,rank+1,file+1);
                         blackPieces.push(cells[rank][file].piece);
                         file++;
                         break;
                     case 'q':
-                        cells[rank][file].piece = new Queen('b',rank+1,file+1);
+                        cells[rank][file].piece = new Queen(PieceColor.Black,rank+1,file+1);
                         blackPieces.push(cells[rank][file].piece);
                         file++;
                         break;
                     case 'k':
-                        cells[rank][file].piece = new King('b',rank+1,file+1);
+                        cells[rank][file].piece = new King(PieceColor.Black,rank+1,file+1);
                         blackPieces.push(cells[rank][file].piece);
-                        blackKing = cells[rank][file].piece;
+                        blackKing = cells[rank][file].piece as King;
                         file++;
                         break;
                     case '/':
@@ -564,31 +567,31 @@
             console.log('FEN string bad');
         }
         //Handling  turn.
-        whiteTurn = segements[1] === 'w';
+        // whiteTurn = segements[1] === 'w';
         //Handling what rooks can be castled
-        if(segements[2] !== '-'){
-            if(segements[2].contains('K'))
-                cells[0][7].piece.hasMoved = false;
-            else
-                cells[0][7].piece.hasMoved = true;
-            if(segements[2].contains('Q'))
-                cells[0][0].piece.hasMoved = false;
-            else
-                cells[0][0].piece.hasMoved = true;
-            if(segements[2].contains('k'))
-                cells[7][7].piece.hasMoved = false;
-            else
-                cells[7][7].piece.hasMoved = true;
-            if(segements[2].contains('q'))
-                cells[7][0].piece.hasMoved = false;
-            else
-                cells[7][0].piece.hasMoved = true;
+        // if(segements[2] !== '-'){
+        //     if(segements[2].contains('K'))
+        //         cells[0][7].piece.hasMoved = false;
+        //     else
+        //         cells[0][7].piece.hasMoved = true;
+        //     if(segements[2].contains('Q'))
+        //         cells[0][0].piece.hasMoved = false;
+        //     else
+        //         cells[0][0].piece.hasMoved = true;
+        //     if(segements[2].contains('k'))
+        //         cells[7][7].piece.hasMoved = false;
+        //     else
+        //         cells[7][7].piece.hasMoved = true;
+        //     if(segements[2].contains('q'))
+        //         cells[7][0].piece.hasMoved = false;
+        //     else
+        //         cells[7][0].piece.hasMoved = true;
         }
         //Handling what pawn can be En passant
-        if(segements[3] !== '-')
-            enPassantPawn = cells[letterToNumber(segements[3][0])-1][segements[3][0]-1].piece.enPassant = true;
+        // if(segements[3] !== '-')
+        //     enPassantPawn = cells[letterToNumber(segements[3][0])-1][segements[3][0]-1].piece.enPassant = true;
         //Handle Turns ...
-    }
+    
 
     function cleanBoard(cells){
         whitePieces.length = 0;
@@ -601,7 +604,7 @@
     }
 
     export function rotateBoard(){
-        boardSide = boardSide === 'w' ? 'b' : 'w';
+        boardSide = boardSide === 'w' ? 'b': 'w';
     }
 
     export function setColor(c){
@@ -620,7 +623,7 @@
         {#each row as cell}
         <div class={`${cell.color}cell`} 
             class:whitecellclicked={cell.clicked && cell.color === 'white'}
-            class:blackcellclicked={cell.clicked && cell.color === 'black'} on:click={() => {cell.promote ? promotePiece(cell) : onCellClick(cell)}}>
+            class:blackcellclicked={cell.clicked && cell.color === 'black'} on:click={() => {cell.promote ? promotePiece(cell): onCellClick(cell)}}>
             {#if cell.promote}
                 <span class='promote-cell'></span>
                 {#if cell.rank === 1 || cell.rank === 8}
@@ -646,7 +649,7 @@
                 </span>
             {/if}
             {#if cell.possibleMove}
-                <span class={cell.piece ? 'piece-possible-move' : 'move-location'}></span>
+                <span class={cell.piece ? 'piece-possible-move': 'move-location'}></span>
             {/if}
         </div>
         {/each}
@@ -790,7 +793,7 @@
         transform: scale(0.75);
     }
 
-    :global(.promotion-cell) {
+   :global(.promotion-cell) {
         background-color: black;
     }
 

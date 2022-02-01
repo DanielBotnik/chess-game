@@ -1,16 +1,17 @@
+import type { Board, Move, PieceColor } from '../types';
 import { Piece } from './piece'
 
 export class Queen extends Piece{
     
-    constructor(color,rank,file) {
+    constructor(color: PieceColor,rank: number,file: number) {
         super(color,rank,file);
     }
 
-    getMoves(board) {
-        var rank = this.rank - 1;
-        var file = this.file - 1;
-        var moves = [];
-        var up,down,left,right,leftUp,rightUp,leftDown,rightDown;
+    getMoves(board: Board): Array<Move> {
+        let rank: number = this.rank - 1;
+        let file: number = this.file - 1;
+        let moves: Array<Move> = [];
+        let up: number,down: number,left: number,right: number,leftUp: number,rightUp: number,leftDown: number,rightDown: number;
         up = down = left = right = leftUp = rightUp = leftDown = rightDown = 1;
         while(board[rank+up] && !board[rank+up][file].piece){
             moves.push({
