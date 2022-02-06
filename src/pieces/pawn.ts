@@ -1,5 +1,5 @@
 import type { Board, Move } from '../types';
-import { PieceColor } from '../types';
+import { Color } from '../types';
 import { Piece } from './piece';
 
 export class Pawn extends Piece {
@@ -7,9 +7,9 @@ export class Pawn extends Piece {
     public hasMoved: boolean;
     public enPassant: boolean;
 
-    constructor(color: PieceColor, rank: number, file: number) {
+    constructor(color: Color, rank: number, file: number) {
         super(color,rank,file);
-        this.hasMoved = !((color == PieceColor.White && rank == 2 ) || (color == PieceColor.Black && rank == 7));
+        this.hasMoved = !((color == Color.White && rank == 2 ) || (color == Color.Black && rank == 7));
         this.enPassant = false;
     }
 
@@ -17,7 +17,7 @@ export class Pawn extends Piece {
         let rank: number = this.rank - 1;
         let file: number = this.file - 1;
         let moves: Array<Move> = [];
-        let moveDirection: number = this.color === PieceColor.White ? 1 : -1;
+        let moveDirection: number = this.color === Color.White ? 1 : -1;
         if(!board[rank+moveDirection][file].piece){
             moves.push({
                 i: rank+moveDirection,

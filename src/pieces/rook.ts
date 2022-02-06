@@ -1,4 +1,4 @@
-import { PieceColor } from '../types';
+import { Color } from '../types';
 import type { Move, Board } from '../types';
 import { Piece } from './piece';
 
@@ -6,9 +6,9 @@ export class Rook extends Piece {
     
     public hasMoved: boolean;
 
-    constructor(color: PieceColor,rank: number,file: number){
+    constructor(color: Color,rank: number,file: number){
         super(color,rank,file);
-        this.hasMoved = [1,8].includes(file) && (color === PieceColor.White && rank === 1 || color === PieceColor.Black && rank === 8);
+        this.hasMoved = [1,8].includes(file) && (color === Color.White && rank === 1 || color === Color.Black && rank === 8);
     }
     
     getMoves(board: Board): Array<Move> {

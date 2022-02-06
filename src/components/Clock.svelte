@@ -1,24 +1,22 @@
-<script defer>
+<script defer lang="ts">
 
-import * as consts from '../assets/constants.js';
+import { Sounds, START_FEN } from '../assets/constants';
+import type { Color } from '../types';
 
-    let clock;
-    let table;
+    let firstClock: string = '00:00';
+    let firstName: string = 'Shira Madar';
+    let secondClock: string = '00:00';
+    let secondName: string = 'Daniel Botnik';
 
-    let firstClock = '00:00';
-    let firstName = 'Shira Madar';
-    let secondClock = '00:00';
-    let secondName = 'Daniel Botnik';
-
-    let currentTurn = 1;
-    let shownTurn = 1;
-    let moves = [];
-    let boardFens = [consts.START_FEN];
+    let currentTurn: number = 1;
+    let shownTurn: number = 1;
+    let moves: Array<[string]|[string,string]> = [];
+    let boardFens: Array<string> = [START_FEN];
 
     export var changeBoard;
 
 
-    export function addMove(color, value, fen) {
+    export function addMove(color: Color, value: string, fen: string): void {
         if(currentTurn % 2)
             moves.push([value]);
         else {
@@ -30,7 +28,7 @@ import * as consts from '../assets/constants.js';
         shownTurn = currentTurn;
     }
 
-    function clickOnMove(index,color) {
+    function clickOnMove(index: number,color: number): void {
         let newShownTurn = index * 2 + color + 2;
         if(shownTurn + 1 === newShownTurn) {
             oneTurnForward();
@@ -40,28 +38,28 @@ import * as consts from '../assets/constants.js';
         changeBoard(boardFens[shownTurn-1]);
     }
 
-    function oneTurnBack() {
+    function oneTurnBack(): void {
         if(shownTurn < 2)
             return;
         shownTurn--;
         changeBoard(boardFens[shownTurn-1]);
     }
 
-    function oneTurnForward() {
+    function oneTurnForward(): void {
         if(shownTurn >= currentTurn)
             return;
         shownTurn++;
         changeBoard(boardFens[shownTurn-1]) ?
-        new Audio(consts.CAPTURE_AUDIO).play() :
-        new Audio(consts.MOVE_AUDIO).play();
+        new Audio(Sounds.CAPTURE).play() :
+        new Audio(Sounds.MOVE).play();
     }
 
-    function gotoCurrent() {
+    function gotoCurrent(): void {
         shownTurn = currentTurn;
         changeBoard(boardFens[shownTurn-1]);
     }
 
-    function gotoStart() {
+    function gotoStart(): void {
         shownTurn = 1;
         changeBoard(boardFens[shownTurn-1]);
     }
@@ -73,7 +71,7 @@ import * as consts from '../assets/constants.js';
     <script src="https://unpkg.com/ionicons@4.5.10-0/dist/ionicons.js"></script>
 </svelte:head>
 
-<div class='clock' bind:this={clock}>
+<div class='clock'>
     <h1>{firstClock}</h1>
     <p>{firstName}</p>
     <br>
@@ -83,7 +81,7 @@ import * as consts from '../assets/constants.js';
     <button class="btn" on:click={oneTurnForward}><i class="one forward"></i><ion-icon name="skip-forward"></ion-icon></button>
     <button class="btn" on:click={gotoCurrent}><i class="go to end"></i><ion-icon name="fastforward"></ion-icon></button>
     <br>
-    <table class="moves" id='movesTable' bind:this={table}>
+    <table class="moves" id='movesTable'>
         <tbody>
         {#each moves as row,index}
             <tr>
@@ -194,16 +192,12 @@ table tbody tr:nth-of-type(even) {
 
 /*scroll bar*/
 
-thead, tbody { display: block; }
+tbody { display: block; }
 
 tbody {
     height: 170px;       /* Just for the demo          */
     overflow-y: auto;    /* Trigger vertical scroll    */
     overflow-x: hidden;  /* Hide the horizontal scroll */
-}
-
-.current {
-    background-color: greenyellow;
 }
 </style>
 

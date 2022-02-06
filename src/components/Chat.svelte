@@ -1,48 +1,50 @@
 
 
-<script>
-    
-    import store from './store.js';
-    let chat;
+<script defer lang="ts">
+import type { ChatMessage } from '../types.js';
+import store from './store.js';
 
-    export function clickOnSend(data) {
-        store.sendChatMessage(data)
+    let chatInput: string;
+
+    function clickOnSend(): void {
+        store.sendChatMessage(chatInput);
+        chatInput = '';
     }
 
-    let messages = [
+    let messages: Array<ChatMessage> = [
         {sender: 'Daniel',
-        text: 'hello'} ,
+        content: 'hello'} ,
         {sender: 'Shira',
-        text: 'hi!'} ,
+        content: 'hi!'} ,
         {sender: 'Daniel',
-        text: 'hello'} ,
+        content: 'hello'} ,
         {sender: 'Shira',
-        text: 'hi!'} ,
+        content: 'hi!'} ,
         {sender: 'Daniel',
-        text: 'hello'} ,
+        content: 'hello'} ,
         {sender: 'Shira',
-        text: 'hi!'} ,
+        content: 'hi!'} ,
         {sender: 'Daniel',
-        text: 'hello'} ,
+        content: 'hello'} ,
         {sender: 'Shira',
-        text: 'hi!'} ,
+        content: 'hi!'} ,
         {sender: 'Daniel',
-        text: 'hello'} ,
+        content: 'hello'} ,
         {sender: 'Shira',
-        text: 'hi!'} ,
+        content: 'hi!'} ,
         {sender: 'Daniel',
-        text: 'hello'} ,
+        content: 'hello'} ,
         {sender: 'Shira',
-        text: 'hi!'} ,
+        content: 'hi!'} ,
         {sender: 'Daniel',
-        text: 'hello'} ,
+        content: 'hello'} ,
         {sender: 'Shira',
-        text: 'hi!'} ,
+        content: 'hi!'} ,
         {sender: 'Daniel',
-        text: 'hello'} ,
+        content: 'hello'} ,
         {sender: 'Shira',
-        text: 'hi!'} 
-    ];
+        content: 'hi!'} 
+      ];
 
 </script>
 
@@ -51,7 +53,7 @@
     <script src="https://unpkg.com/ionicons@4.5.10-0/dist/ionicons.js"></script>
 </svelte:head>
 
-<div class='chat' bind:this={chat}>
+<div class='chat'>
     <div class="top-bar">
         CHAT
     </div>
@@ -61,14 +63,14 @@
                 <div class="sender">
                     {message.sender}
                 </div>
-                <div class="text">
-                    {message.text}
+                <div class="content">
+                    {message.content}
                 </div>
             </div>
         {/each}
     </div>
     <div class="bottom-bar">
-        <input type="text" placeholder="Type a message..." />
+        <input type="content" placeholder="Type a message..." bind:value={chatInput}/>
         <button type="submit" id="send-button" on:click={clickOnSend}><ion-icon name="paper-plane"></ion-icon></button>
         <!-- להוסיף משתנה מהאינפוט -->
     </div>
@@ -119,7 +121,7 @@
         font-weight: bold;
     }
 
-    .sender, .text
+    .sender, .content
     {
     display:inline;
     }

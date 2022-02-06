@@ -1,4 +1,4 @@
-import { Board, Move, PieceColor } from '../types';
+import { Board, Move, Color } from '../types';
 import { Piece } from './piece'
 import { Rook } from './rook'
 import { Pawn } from './pawn'
@@ -10,9 +10,9 @@ export class King extends Piece {
     
     public hasMoved: boolean
 
-    constructor(color: PieceColor,rank: number,file: number) {
+    constructor(color: Color,rank: number,file: number) {
         super(color,rank,file);
-        this.hasMoved = file === 5 && ((rank === 1 && color === PieceColor.White) || (rank === 8 && color === PieceColor.Black));
+        this.hasMoved = file === 5 && ((rank === 1 && color === Color.White) || (rank === 8 && color === Color.Black));
     }
 
     getMoves(board: Board): Array<Move> {
@@ -60,7 +60,7 @@ export class King extends Piece {
         let up: number, down: number, left: number, right: number, leftUp: number, rightUp: number,leftDown: number,rightDown: number;
         up = down = left = right = leftUp = rightUp = leftDown = rightDown = 1;
         //Pawn is attacking
-        let pawnRank: number = rank + (this.color === PieceColor.White ? 1: -1);
+        let pawnRank: number = rank + (this.color === Color.White ? 1: -1);
         if(board[pawnRank] && [file-1,file+1].some(file => 
             board[pawnRank][file] && board[pawnRank][file].piece?.color !== this.color &&
             board[pawnRank][file].piece instanceof Pawn))

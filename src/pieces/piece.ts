@@ -1,8 +1,8 @@
-import type { PieceColor, Move, Board } from "../types";
+import type { Color, Move, Board } from "../types";
 
 export abstract class Piece {
     
-    constructor(public color: PieceColor ,public rank: number,public file: number){
+    constructor(public color: Color ,public rank: number,public file: number){
         this.color = color;
         this.rank = rank;
         this.file = file;

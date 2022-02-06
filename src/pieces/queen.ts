@@ -1,9 +1,9 @@
-import type { Board, Move, PieceColor } from '../types';
+import type { Board, Move, Color } from '../types';
 import { Piece } from './piece'
 
 export class Queen extends Piece{
     
-    constructor(color: PieceColor,rank: number,file: number) {
+    constructor(color: Color,rank: number,file: number) {
         super(color,rank,file);
     }
 
