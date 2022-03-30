@@ -2,6 +2,11 @@ import type { Piece } from "./pieces/piece.js";
 
 // Board & Game Types & Functions
 
+export const enum BoardType {
+    AGINST_PLAYER,
+    AGINST_YOURSELF,
+}
+
 export const enum Color {
     White = 'w',
     Black = 'b',
@@ -18,10 +23,20 @@ export interface Cell {
     promote: Color,
 }
 
-export interface Move {
-    i: number,
-    j: number,
+// both file and rank start at 0. and represented as numbers
+export type Move = {
+    file: number,
+    rank: number,
     special?: 'enPassant' | 'promote' | 'castling',
+}
+
+export type FullMove = {
+    from_file: number,
+    from_rank: number,
+    to_file: number,
+    to_rank: number,
+    special?: 'enPassant' | 'promote' | 'castling',
+    promote?: string //'queen' | 'rook' | 'bishop' | 'knight',
 }
 
 export type Board = Array<Array<Cell>>;

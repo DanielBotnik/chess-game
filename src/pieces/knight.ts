@@ -16,8 +16,8 @@ export class Knight extends Piece {
             return cords[1].map(file => {
                 if(board[cords[0]][file] && board[cords[0]][file].piece?.color !== this.color) {
                     return {
-                        i: cords[0],
-                        j: file,
+                        rank: cords[0],
+                        file: file,
                     }
                 }
             })

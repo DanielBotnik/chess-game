@@ -12,7 +12,6 @@ export class King extends Piece {
 
     constructor(color: Color,rank: number,file: number) {
         super(color,rank,file);
-        this.hasMoved = file === 5 && ((rank === 1 && color === Color.White) || (rank === 8 && color === Color.Black));
     }
 
     getMoves(board: Board): Array<Move> {
@@ -23,8 +22,8 @@ export class King extends Piece {
                 return [file-1,file,file+1].map(file => {
                     if(board[rank][file] && board[rank][file].piece?.color != this.color)
                         return {
-                            i: rank,
-                            j: file,
+                            rank: rank,
+                            file: file,
                         }
                 })
             }
@@ -34,8 +33,8 @@ export class King extends Piece {
                 let rook = board[rank][7].piece as Rook;
                 if(!rook.hasMoved && !board[rank][6].piece && !board[rank][5].piece) {
                     moves.push({
-                        i: rank,
-                        j: 7,
+                        rank: rank,
+                        file: 7,
                         special: 'castling',
                     })
                 }
@@ -44,8 +43,8 @@ export class King extends Piece {
                 let rook = board[rank][0].piece as Rook;
                 if(!rook.hasMoved && !board[rank][1].piece && !board[rank][2].piece && !board[rank][3].piece) {
                     moves.push({
-                        i: rank,
-                        j: 0,
+                        rank: rank,
+                        file: 0,
                         special: 'castling',
                     })
                 }
@@ -163,20 +162,20 @@ export class King extends Piece {
 
     moveToCheck(board: Board, move: Move): void {
         if(move.special === 'castling'){
-            if(move.j === 0){
-                board[move.i][move.j].piece.file = 4; 
-                board[this.rank-1][3].piece = board[move.i][move.j].piece;
+            if(move.file === 0){
+                board[move.rank][move.file].piece.file = 4; 
+                board[this.rank-1][3].piece = board[move.rank][move.file].piece;
                 board[this.rank-1][2].piece = this;
                 board[this.rank-1][this.file-1].piece = null;
-                board[move.i][move.j].piece = null;
+                board[move.rank][move.file].piece = null;
                 this.file = 3;
             }
             else {
-                board[move.i][move.j].piece.file = 6; 
-                board[this.rank-1][5].piece = board[move.i][move.j].piece;
+                board[move.rank][move.file].piece.file = 6; 
+                board[this.rank-1][5].piece = board[move.rank][move.file].piece;
                 board[this.rank-1][6].piece = this;
                 board[this.rank-1][this.file-1].piece = null;
-                board[move.i][move.j].piece = null;
+                board[move.rank][move.file].piece = null;
                 this.file = 7;
             }
         }
@@ -185,7 +184,7 @@ export class King extends Piece {
 
     moveToReal(board: Board,move: Move): void {
         if(move.special === 'castling')
-            (board[move.i][move.j].piece as Rook).hasMoved = true;
+            (board[move.rank][move.file].piece as Rook).hasMoved = true;
         this.moveToCheck(board,move);
         this.hasMoved = true;
     }

@@ -8,11 +8,11 @@ export abstract class Piece {
         this.file = file;
     }
     
-    moveToCheck(board: Board ,move): void {
+    moveToCheck(board: Board ,move: Move): void {
         board[this.rank-1][this.file-1].piece = null;
-        this.rank = move.i + 1;
-        this.file = move.j + 1;
-        board[move.i][move.j].piece = this;
+        this.rank = move.rank + 1;
+        this.file = move.file + 1;
+        board[move.rank][move.file].piece = this;
     }
 
     moveToReal(board: Board,move: Move): void {

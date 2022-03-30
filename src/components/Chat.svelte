@@ -2,56 +2,24 @@
 
 <script defer lang="ts">
 import type { ChatMessage } from '../types.js';
-import store from './store.js';
+import store from '../store';
 
     let chatInput: string;
+    let messages: Array<ChatMessage> = [];
 
     function clickOnSend(): void {
         store.sendChatMessage(chatInput);
         chatInput = '';
     }
 
-    let messages: Array<ChatMessage> = [
-        {sender: 'Daniel',
-        content: 'hello'} ,
-        {sender: 'Shira',
-        content: 'hi!'} ,
-        {sender: 'Daniel',
-        content: 'hello'} ,
-        {sender: 'Shira',
-        content: 'hi!'} ,
-        {sender: 'Daniel',
-        content: 'hello'} ,
-        {sender: 'Shira',
-        content: 'hi!'} ,
-        {sender: 'Daniel',
-        content: 'hello'} ,
-        {sender: 'Shira',
-        content: 'hi!'} ,
-        {sender: 'Daniel',
-        content: 'hello'} ,
-        {sender: 'Shira',
-        content: 'hi!'} ,
-        {sender: 'Daniel',
-        content: 'hello'} ,
-        {sender: 'Shira',
-        content: 'hi!'} ,
-        {sender: 'Daniel',
-        content: 'hello'} ,
-        {sender: 'Shira',
-        content: 'hi!'} ,
-        {sender: 'Daniel',
-        content: 'hello'} ,
-        {sender: 'Shira',
-        content: 'hi!'} 
-      ];
+    store.onChatMessageRecived((message: ChatMessage) => {
+      if (!message)
+        return;
+      messages.push(message);
+      messages = messages;
+    });
 
 </script>
-
-
-<svelte:head>
-    <script src="https://unpkg.com/ionicons@4.5.10-0/dist/ionicons.js"></script>
-</svelte:head>
 
 <div class='chat'>
     <div class="top-bar">

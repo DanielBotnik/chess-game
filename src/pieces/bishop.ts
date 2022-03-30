@@ -15,58 +15,58 @@ export class Bishop extends Piece {
         //TODO: Check if === null can be removed.
         while(board[rank+rightUp] && board[rank+rightUp][file+rightUp]?.piece === null){
             moves.push({
-                i: rank+rightUp,
-                j: file+rightUp,
+                rank: rank+rightUp,
+                file: file+rightUp,
             });
             rightUp++;
         }
         if(board[rank+rightUp] && board[rank+rightUp][file+rightUp]?.piece
             && board[rank+rightUp][file+rightUp].piece.color != this.color){
                 moves.push({
-                    i: rank+rightUp,
-                    j: file+rightUp,
+                    rank: rank+rightUp,
+                    file: file+rightUp,
                 });
         }
         while(board[rank+leftUp] && board[rank+leftUp][file-leftUp]?.piece === null){
             moves.push({
-                i: rank+leftUp,
-                j: file-leftUp,
+                rank: rank+leftUp,
+                file: file-leftUp,
             });
             leftUp++;
         }
         if(board[rank+leftUp] && board[rank+leftUp][file-leftUp]?.piece
             && board[rank+leftUp][file-leftUp].piece.color != this.color){
                 moves.push({
-                    i: rank+leftUp,
-                    j: file-leftUp,
+                    rank: rank+leftUp,
+                    file: file-leftUp,
                 });
         }
         while(board[rank-rightDown] && board[rank-rightDown][file+rightDown]?.piece === null){
             moves.push({
-                i: rank-rightDown,
-                j: file+rightDown,
+                rank: rank-rightDown,
+                file: file+rightDown,
             });
             rightDown++;
         }
         if(board[rank-rightDown] && board[rank-rightDown][file+rightDown]?.piece
             && board[rank-rightDown][file+rightDown].piece.color != this.color){
                 moves.push({
-                    i: rank-rightDown,
-                    j: file+rightDown,
+                    rank: rank-rightDown,
+                    file: file+rightDown,
                 });
         }
         while(board[rank-leftDown] && board[rank-leftDown][file-leftDown]?.piece === null){
             moves.push({
-                i: rank-leftDown,
-                j: file-leftDown,
+                rank: rank-leftDown,
+                file: file-leftDown,
             });
             leftDown++;
         }
         if(board[rank-leftDown] && board[rank-leftDown][file-leftDown]?.piece
             && board[rank-leftDown][file-leftDown].piece.color != this.color){
                 moves.push({
-                    i: rank-leftDown,
-                    j: file-leftDown,
+                    rank: rank-leftDown,
+                    file: file-leftDown,
                 });
         }
         return moves;

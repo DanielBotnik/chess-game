@@ -20,49 +20,49 @@ export class Pawn extends Piece {
         let moveDirection: number = this.color === Color.White ? 1 : -1;
         if(!board[rank+moveDirection][file].piece){
             moves.push({
-                i: rank+moveDirection,
-                j: file,
+                rank: rank+moveDirection,
+                file: file,
             });
         }
         if(!this.hasMoved && !board[rank+moveDirection*2][file].piece && !board[rank+moveDirection][file].piece){
             moves.push({
-                i: rank+moveDirection*2,
-                j: file,
+                rank: rank+moveDirection*2,
+                file: file,
             });
         }
         if(board[rank+moveDirection][file+1]?.piece && 
             board[rank+moveDirection][file+1].piece?.color != this.color){
             moves.push({
-                i: rank+moveDirection,
-                j: file+1,
+                rank: rank+moveDirection,
+                file: file+1,
             })
         }
         if(board[rank+moveDirection][file-1]?.piece && 
             board[rank+moveDirection][file-1].piece?.color != this.color){
             moves.push({
-                i: rank+moveDirection,
-                j: file-1,
+                rank: rank+moveDirection,
+                file: file-1,
             })
         }
         if(board[rank][file-1]?.piece && board[rank][file-1].piece.color != this.color &&
             board[rank][file-1].piece instanceof Pawn && (board[rank][file-1].piece as Pawn).enPassant)
             moves.push({
-                i: rank+moveDirection,
-                j: file-1,
+                rank: rank+moveDirection,
+                file: file-1,
                 special: 'enPassant'
             });
         if(board[rank][file+1]?.piece && board[rank][file+1].piece.color != this.color &&
             board[rank][file+1].piece instanceof Pawn && (board[rank][file+1].piece as Pawn).enPassant)
             moves.push({
-                i: rank+moveDirection,
-                j: file+1,
+                rank: rank+moveDirection,
+                file: file+1,
                 special: 'enPassant'
             });
         return moves;
     }
 
     moveToReal(board: Board,move: Move): void {
-        if(Math.abs(move.i - this.rank+1) === 2)
+        if(Math.abs(move.file - this.rank+1) === 2)
             this.enPassant = true;
         this.hasMoved = true;
         super.moveToReal(board,move);

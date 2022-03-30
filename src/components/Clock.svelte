@@ -1,7 +1,8 @@
 <script defer lang="ts">
 
-import { Sounds, START_FEN } from '../assets/constants';
+import { Sounds, START_FEN } from '../constants';
 import type { Color } from '../types';
+import type Board from './Board.svelte';
 
     let firstClock: string = '00:00';
     let firstName: string = 'Shira Madar';
@@ -13,7 +14,7 @@ import type { Color } from '../types';
     let moves: Array<[string]|[string,string]> = [];
     let boardFens: Array<string> = [START_FEN];
 
-    export var changeBoard;
+    export let board: Board | undefined = undefined;
 
 
     export function addMove(color: Color, value: string, fen: string): void {
@@ -35,33 +36,37 @@ import type { Color } from '../types';
             return;
         }
         shownTurn = newShownTurn;
-        changeBoard(boardFens[shownTurn-1]);
+        board.changeBoard(boardFens[shownTurn-1]);
     }
 
     function oneTurnBack(): void {
         if(shownTurn < 2)
             return;
         shownTurn--;
-        changeBoard(boardFens[shownTurn-1]);
+        board.changeBoard(boardFens[shownTurn-1]);
     }
 
     function oneTurnForward(): void {
         if(shownTurn >= currentTurn)
             return;
         shownTurn++;
-        changeBoard(boardFens[shownTurn-1]) ?
+        board.changeBoard(boardFens[shownTurn-1]) ?
         new Audio(Sounds.CAPTURE).play() :
         new Audio(Sounds.MOVE).play();
     }
 
     function gotoCurrent(): void {
         shownTurn = currentTurn;
-        changeBoard(boardFens[shownTurn-1]);
+        board.changeBoard(boardFens[shownTurn-1]);
     }
 
     function gotoStart(): void {
         shownTurn = 1;
-        changeBoard(boardFens[shownTurn-1]);
+        board.changeBoard(boardFens[shownTurn-1]);
+    }
+
+    export function setBoard(b: Board) {
+        board = b;
     }
 
 </script>
