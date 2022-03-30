@@ -1,4 +1,39 @@
-/node_modules/
-/public/build/
+/frontend/node_modules/
+/frontend/public/build/
 
-.DS_Store
+/frontend/.DS_Store
+/frontend/vscode/
+
+HELP.md
+/server/target/
+!.mvn/wrapper/maven-wrapper.jar
+!**/src/main/**/target/
+!**/src/test/**/target/
+
+### STS ###
+/server/apt_generated
+/server/classpath
+/server/factorypath
+/server/project
+/server/settings
+/server/springBeans
+/server/sts4-cache
+
+### IntelliJ IDEA ###
+/server/.idea
+/server/.iws
+/server/iml
+/server/ipr
+
+### NetBeans ###
+server/nbproject/private/
+server/nbbuild/
+server/dist/
+server/nbdist/
+server/.nb-gradle/
+server/build/
+!**server/src/main/**/build/
+!**server/src/test/**/build/
+
+### VS Code ###
+.vscode/
